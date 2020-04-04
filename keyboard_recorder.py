@@ -18,7 +18,7 @@ def on_press(key_data):
         key_value = str(key_data)
         key_type = "else"
     finally:
-        print(key_value)
+        print(key_value, time.time())
         key_value_list.append((key_value, ts))
         key_value_list_press.append((key_value, key_type, ts))
 
@@ -37,16 +37,17 @@ def on_release(key_data):
         return False
 
 
-def start_keyboard_logging(input_listener):
+def start_keyboard_logging(nothing):
+    print("keyboard listener start!")
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)
     with listener:
         listener.join()
-
-    return listener, key_value_list_press
+    # keyboard.Listener(on_press=on_press, on_release=on_release).start()
+    return key_value_list_press
 
 
 if __name__ == "__main__":
-    p = Process(target=start_keyboard_logging, args=('bob',))
+    p = Process(target=start_keyboard_logging, args=('nothing',))
     p.start()
     p.join()
     time.sleep(0.5)

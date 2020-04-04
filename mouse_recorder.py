@@ -21,17 +21,18 @@ def on_scroll(x, y, dx, dy):
         (x, y)))
 
 
-# Collect events until released
-with mouse.Listener(
+if __name__ == "__main__":
+    # Collect events until released
+    with mouse.Listener(
+            on_move=on_move,
+            on_click=on_click,
+            on_scroll=on_scroll) as listener:
+        listener.join()
+
+    # ...or, in a non-blocking fashion:
+    listener = mouse.Listener(
         on_move=on_move,
         on_click=on_click,
-        on_scroll=on_scroll) as listener:
-    listener.join()
+        on_scroll=on_scroll)
 
-# ...or, in a non-blocking fashion:
-listener = mouse.Listener(
-    on_move=on_move,
-    on_click=on_click,
-    on_scroll=on_scroll)
-
-listener.start()
+    listener.start()

@@ -26,7 +26,7 @@ class CenterPane(QWidget):
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.objCntrPane)
-        self.objCntrPane.insertPlainText("doing.\n")
+        self.objCntrPane.insertPlainText("write something")
 
     def save_realtime_text(self):
         print(self.objCntrPane.toPlainText(), time.time(), "\n")
@@ -44,6 +44,14 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Main Window')
         self.setGeometry(winLeft, winTop, winWidth, winHeight)
         self.setCentralWidget(CenterPane())
+
+def execute_ui(nothing):
+    app = QApplication([])
+
+    GUI = MainWindow()
+    GUI.show()
+
+    sysExit(app.exec_())
 
 
 
