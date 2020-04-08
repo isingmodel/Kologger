@@ -6,9 +6,14 @@ from multiprocessing import Process
 import time
 from sys import exit as sysExit
 
-if __name__ == "__main__":
-    p = Process(target=ui.execute_ui, args=('nothing',))
-    p.start()
-    # time.sleep(0.5)
 
-    kr.start_keyboard_logging("nothing")
+def make_listener_run(listener):
+    listener.join()
+
+
+if __name__ == "__main__":
+    listener = kr.start_keyboard_logging("nothing")
+    p = Process(target=make_listener_run, args=(listener,))
+    p.start()
+    ui.execute_ui('nothing')
+    listener.join()

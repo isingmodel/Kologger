@@ -1,5 +1,6 @@
 from pynput import keyboard
 import time
+import pickle as pkl
 from multiprocessing import Process
 key_value_list = list()
 key_value_list_press = list()
@@ -34,16 +35,17 @@ def on_release(key_data):
     key_value_list.append((key_value, ts))
 
     if key_data == keyboard.Key.esc:
+        with open("./temp_data/keyboard_recording.pkl", "wb") as f:
+            pkl.dump(key_value_list, f)
         return False
 
 
-def start_keyboard_logging(nothing):
+def start_keyboard_logging(data_path):
     print("keyboard listener start!")
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-    with listener:
-        listener.join()
-    # keyboard.Listener(on_press=on_press, on_release=on_release).start()
-    return key_value_list_press
+    listener.start()
+
+    return listener
 
 
 if __name__ == "__main__":
