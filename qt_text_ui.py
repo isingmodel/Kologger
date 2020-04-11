@@ -8,6 +8,7 @@ from PyQt5 import QtCore
 import pickle as pkl
 
 import time
+import sys
 
 
 class textbox(QPlainTextEdit):
@@ -26,13 +27,14 @@ class CenterPane(QWidget):
 
         self.objCntrPane = textbox()
         self.objCntrPane.textChanged.connect(self.add_realtime_text)
-        self.button = QPushButton('save', self)
-        # self.button.clicked.connect(self.save_realtime_text)
+        self.button = QPushButton('save&exit', self)
+        self.button.clicked.connect(self.save_and_exit)
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.objCntrPane)
         hbox.addWidget(self.button)
         self.objCntrPane.insertPlainText("write something")
+
 
     def add_realtime_text(self):
         # print(self.objCntrPane.toPlainText(), time.time(), "\n")
@@ -40,14 +42,15 @@ class CenterPane(QWidget):
         # print(self.objCntrPane.cursorRect())
         self.data_queue.put(('pyqt', self.objCntrPane.toPlainText(), time.time()))
 
-    # def save_realtime_text(self):
-    #     data = self.data
-    #     with open("./temp_data/ui_data.pkl", 'wb') as f:
-    #         pkl.dump(data, f)
+    def save_and_exit(self):
+        self.data_queue.put(("exit",))
+        time.sleep(0.5)
+        sys.exit(0)
+
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, data_queue, parent=None):
+    def __init__(self, data_queue, p_save, p_keyboard, parent=None):
         super(MainWindow, self).__init__(parent)
         winLeft = 100
         winTop = 100
@@ -60,10 +63,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(CenterPane(data_queue))
 
 
-def execute_ui(data_queue):
+def execute_ui(data_queue, p_save, p_keyboard):
     app = QApplication([])
-    print(123)
-    GUI = MainWindow(data_queue)
+    GUI = MainWindow(data_queue, p_save, p_keyboard)
     GUI.show()
 
     sysExit(app.exec_())

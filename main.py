@@ -30,9 +30,9 @@ def get_data_from_queue(d_q):
             elif data[0] == "exit":
                 break
         except Empty:
-            print("queue empty")
             pass
-        time.sleep(0.02)
+
+        time.sleep(0.005)
     with open("./temp_data/keyboard_recording.pkl", 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
     with open("./temp_data/ui_data.pkl", 'wb') as f_ui:
@@ -43,9 +43,11 @@ def get_data_from_queue(d_q):
 if __name__ == "__main__":
     data_queue = Queue(maxsize=200)
     p_save = Process(target=get_data_from_queue, args=(data_queue,))
+    p_keyboard = kr.GetKeyboardData(data_queue)
+    p_save.daemon = True
+    p_keyboard.daemon = True
     p_save.start()
-    p = Process(target=make_listener_run, args=(data_queue,))
-    p.start()
-    ui.execute_ui(data_queue)
+    p_keyboard.start()
+    ui.execute_ui(data_queue, p_save, p_keyboard)
 
 
