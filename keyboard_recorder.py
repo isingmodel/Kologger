@@ -1,4 +1,3 @@
-import pickle as pkl
 import time
 from multiprocessing import Process
 
