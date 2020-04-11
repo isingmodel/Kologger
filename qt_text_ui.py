@@ -19,15 +19,15 @@ class textbox(QPlainTextEdit):
 
 
 class CenterPane(QWidget):
-    def __init__(self):
+    def __init__(self, data_queue):
         QWidget.__init__(self)
-
+        self.data_queue = data_queue
         self.data = list()
 
         self.objCntrPane = textbox()
         self.objCntrPane.textChanged.connect(self.add_realtime_text)
         self.button = QPushButton('save', self)
-        self.button.clicked.connect(self.save_realtime_text)
+        # self.button.clicked.connect(self.save_realtime_text)
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.objCntrPane)
@@ -35,21 +35,19 @@ class CenterPane(QWidget):
         self.objCntrPane.insertPlainText("write something")
 
     def add_realtime_text(self):
-        print(self.objCntrPane.toPlainText(), time.time(), "\n")
-        self.data.append((self.objCntrPane.toPlainText(), time.time()))
+        # print(self.objCntrPane.toPlainText(), time.time(), "\n")
+        # self.data.append((self.objCntrPane.toPlainText(), time.time()))
         # print(self.objCntrPane.cursorRect())
+        self.data_queue.put(('pyqt', self.objCntrPane.toPlainText(), time.time()))
 
-    def save_realtime_text(self):
-        data = self.data
-        with open("./temp_data/ui_data.pkl", 'wb') as f:
-            pkl.dump(data, f)
-
-
-
+    # def save_realtime_text(self):
+    #     data = self.data
+    #     with open("./temp_data/ui_data.pkl", 'wb') as f:
+    #         pkl.dump(data, f)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, data_queue, parent=None):
         super(MainWindow, self).__init__(parent)
         winLeft = 100
         winTop = 100
@@ -59,15 +57,13 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('Main Window')
         self.setGeometry(winLeft, winTop, winWidth, winHeight)
-        self.setCentralWidget(CenterPane())
+        self.setCentralWidget(CenterPane(data_queue))
 
 
-
-
-def execute_ui(nothing):
+def execute_ui(data_queue):
     app = QApplication([])
     print(123)
-    GUI = MainWindow()
+    GUI = MainWindow(data_queue)
     GUI.show()
 
     sysExit(app.exec_())
