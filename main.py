@@ -1,18 +1,11 @@
-import qt_text_ui as ui
-import keyboard_recorder as kr
-import mouse_recorder as mr
-from pynput import keyboard
+import pickle as pkl
+import time
 from multiprocessing import Process
 from multiprocessing import Queue
-import pickle as pkl
 from queue import Empty
-import time
-from sys import exit as sysExit
 
-
-def make_listener_run(listener):
-    listener = kr.start_keyboard_logging("nothing")
-    listener.join()
+import keyboard_recorder as kr
+import qt_text_ui as ui
 
 
 def get_data_from_queue(d_q):
@@ -39,7 +32,6 @@ def get_data_from_queue(d_q):
         pkl.dump(pynput_data, f_ui)
 
 
-
 if __name__ == "__main__":
     data_queue = Queue(maxsize=200)
     p_save = Process(target=get_data_from_queue, args=(data_queue,))
@@ -49,5 +41,3 @@ if __name__ == "__main__":
     p_save.start()
     p_keyboard.start()
     ui.execute_ui(data_queue, p_save, p_keyboard)
-
-

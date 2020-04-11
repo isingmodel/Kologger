@@ -1,14 +1,12 @@
+import sys
+import time
 from sys import exit as sysExit
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 # from PyQt5.QtGui     import
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton
-from PyQt5 import QtCore
-import pickle as pkl
-
-import time
-import sys
 
 
 class textbox(QPlainTextEdit):
@@ -27,7 +25,7 @@ class CenterPane(QWidget):
 
         self.objCntrPane = textbox()
         self.objCntrPane.textChanged.connect(self.add_realtime_text)
-        self.button = QPushButton('save&exit', self)
+        self.button = QPushButton('save and exit', self)
         self.button.clicked.connect(self.save_and_exit)
 
         hbox = QHBoxLayout(self)
@@ -35,18 +33,13 @@ class CenterPane(QWidget):
         hbox.addWidget(self.button)
         self.objCntrPane.insertPlainText("write something")
 
-
     def add_realtime_text(self):
-        # print(self.objCntrPane.toPlainText(), time.time(), "\n")
-        # self.data.append((self.objCntrPane.toPlainText(), time.time()))
-        # print(self.objCntrPane.cursorRect())
         self.data_queue.put(('pyqt', self.objCntrPane.toPlainText(), time.time()))
 
     def save_and_exit(self):
         self.data_queue.put(("exit",))
         time.sleep(0.5)
         sys.exit(0)
-
 
 
 class MainWindow(QMainWindow):
