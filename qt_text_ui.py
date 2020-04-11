@@ -4,7 +4,6 @@ from sys import exit as sysExit
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-# from PyQt5.QtGui     import
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton
 
@@ -40,7 +39,6 @@ class CenterPane(QWidget):
         sys.exit(0)
 
     def eventFilter(self, obj, event):
-        # print("allevt", event.type(), event)
         if event.type() == 7:  # 7, 51, 6 is QkeyEvent
             cursor_position = self.objCntrPane.textCursor().anchor()
             self.data_queue.put((1,

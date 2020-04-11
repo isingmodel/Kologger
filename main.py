@@ -6,6 +6,7 @@ from queue import Empty
 
 import keyboard_recorder as kr
 import qt_text_ui as ui
+import pandas as pd
 
 
 def get_data_from_queue(d_q):
@@ -31,6 +32,31 @@ def get_data_from_queue(d_q):
         pkl.dump(pynput_data, f_pynput)
     with open("./temp_data/ui_data.pkl", 'wb') as f_ui:
         pkl.dump(pyqt_data, f_ui)
+
+
+def refine_data(kbd_data, ui_data):
+    ui_data_refined = list()
+    kbd_data_refined = list()
+    for i in range(len(ui_data)):
+        if ui_data[i][1] == '' and ui_data[i][2] == '':
+            continue
+        elif ui_data[i][2] == 0:
+            continue
+        else:
+            ui_data_refined.append(ui_data[i])
+
+    for i in range(len(kbd_data)):
+        if kbd_data[i][1] != "None":
+            kbd_data_refined.append(kbd_data[i])
+    return kbd_data_refined, ui_data_refined
+
+
+def list_to_pandas(d_type, d_list):
+    pass
+
+
+def align_two_timeseries(kbd_data, ui_data):
+    pass
 
 
 if __name__ == "__main__":
