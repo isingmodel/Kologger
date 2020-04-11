@@ -26,7 +26,7 @@ class GetKeyboardData(Process):
             key_value = str(key_data)
             key_type = "else"
         finally:
-            self.data_queue.put(('pynput', key_value, time.time()))
+            self.data_queue.put((0, key_value, key_type, time.time()))
 
     def run(self):
         print("keyboard listener start!")

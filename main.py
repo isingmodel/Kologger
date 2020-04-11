@@ -14,10 +14,11 @@ def get_data_from_queue(d_q):
     while True:
         try:
             data = d_q.get(block=False)
-            print(data)
-            if data[0] == "pynput":
+
+            if data[0] == 0:
                 pynput_data.append(data)
-            elif data[0] == "pyqt":
+            elif data[0] == 1:
+
                 pyqt_data.append(data)
 
             elif data[0] == "exit":
@@ -25,11 +26,11 @@ def get_data_from_queue(d_q):
         except Empty:
             pass
 
-        time.sleep(0.005)
+        time.sleep(0.001)
     with open("./temp_data/keyboard_recording.pkl", 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
     with open("./temp_data/ui_data.pkl", 'wb') as f_ui:
-        pkl.dump(pynput_data, f_ui)
+        pkl.dump(pyqt_data, f_ui)
 
 
 if __name__ == "__main__":

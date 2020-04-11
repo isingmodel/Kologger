@@ -16,7 +16,7 @@ class textbox(QPlainTextEdit):
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.inputMethodQuery(Qt.ImEnabled)
 
-
+from PyQt5 import QtGui
 class CenterPane(QWidget):
     def __init__(self, data_queue):
         QWidget.__init__(self)
@@ -24,22 +24,55 @@ class CenterPane(QWidget):
         self.data = list()
 
         self.objCntrPane = textbox()
-        self.objCntrPane.textChanged.connect(self.add_realtime_text)
+        # self.objCntrPane.textChanged.connect(self.add_realtime_text)
+        # self.objCntrPane.keyPressed.connect(self.add_realtime_text)
+        self.objCntrPane.installEventFilter(self)
+
         self.button = QPushButton('save and exit', self)
         self.button.clicked.connect(self.save_and_exit)
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.objCntrPane)
         hbox.addWidget(self.button)
-        self.objCntrPane.insertPlainText("write something")
+        # self.objCntrPane.insertPlainText("write something")
 
-    def add_realtime_text(self):
-        self.data_queue.put(('pyqt', self.objCntrPane.toPlainText(), time.time()))
+    # def add_realtime_text(self):
+    #     self.data_queue.put((1, self.objCntrPane.toPlainText(), time.time()))
 
     def save_and_exit(self):
         self.data_queue.put(("exit",))
         time.sleep(0.5)
         sys.exit(0)
+
+    def eventFilter(self, obj, event):
+        # print("allevt", event.type(), event)
+        if event.type() == 7: # 7, 51, 6 is QkeyEvent
+            cursor_position = self.objCntrPane.textCursor().anchor()
+            self.data_queue.put((1,
+                                 event.text(),
+                                 event.key(),
+                                 self.objCntrPane.toPlainText(),
+                                 time.time(),
+                                 cursor_position,
+                                 ))
+
+        if event.type() == 83 and obj is self.objCntrPane:
+
+            cursor_position = self.objCntrPane.textCursor().anchor()
+
+            self.data_queue.put((1,
+                                 event.preeditString(),
+                                 "",
+                                 self.objCntrPane.toPlainText(),
+                                 time.time(),
+                                 cursor_position,
+                                 ))
+            # print(event.AttributeType.Language)
+            # print(event.commitString())
+            # if event.key() == QtCore.Qt.Key_Return and self.objCntrPane.hasFocus():
+            #     print('Enter pressed')
+            pass
+        return super().eventFilter(obj, event)
 
 
 class MainWindow(QMainWindow):
