@@ -35,8 +35,9 @@ class CenterPane(QWidget):
 
     def save_and_exit(self):
         self.data_queue.put(("exit",))
-        time.sleep(0.5)
-        sys.exit(0)
+        # time.sleep(0.5)
+        QtCore.QCoreApplication.instance().quit()
+        # sys.exit(0)
 
     def eventFilter(self, obj, event):
         if event.type() == 7:  # 7, 51, 6 is QkeyEvent

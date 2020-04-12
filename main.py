@@ -6,7 +6,14 @@ from queue import Empty
 
 import keyboard_recorder as kr
 import qt_text_ui as ui
+import hgtk
+from copy import deepcopy
 import pandas as pd
+
+DOUBLE_JONG_LIST = list('ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ')
+DOUBLE_JONG_DICT = {'ㄳ': ['ㄱ', 'ㅅ'], 'ㄵ': ['ㄴ', 'ㅈ'], 'ㄶ': ['ㄴ', 'ㅎ'], 'ㄺ': ['ㄹ', 'ㄱ'],
+                    'ㄻ': ['ㄹ', 'ㅁ'], 'ㄼ': ['ㄹ', 'ㅂ'], 'ㄽ': ['ㄹ', 'ㅅ'], 'ㄾ': ['ㄹ', 'ㅌ'],
+                    'ㄿ': ['ㄹ', 'ㅍ'], 'ㅀ': ['ㄹ', 'ㅎ'], 'ㅄ': ['ㅂ', 'ㅅ']}
 
 
 def get_data_from_queue(d_q):
@@ -28,10 +35,30 @@ def get_data_from_queue(d_q):
             pass
 
         time.sleep(0.001)
+    print("temp recording!")
     with open("./temp_data/keyboard_recording.pkl", 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
     with open("./temp_data/ui_data.pkl", 'wb') as f_ui:
         pkl.dump(pyqt_data, f_ui)
+
+    print("start converting")
+    # with open("./temp_data/ui_data.pkl", 'rb') as f:
+    #     ui_data = pkl.load(f)
+    # with open("./temp_data/keyboard_recording.pkl", 'rb') as f:
+    #     kbd_data = pkl.load(f)
+    kdb, ui = refine_data(pynput_data, pyqt_data)
+    final_ui_data = refine_ime_data(ui)
+    ui_df = list_to_pandas('ui', final_ui_data)
+    ui_df.to_csv("./ui_data.csv")
+
+
+def split(letter):
+    decomposed = hgtk.letter.decompose(letter)
+    filtered = list()
+    for alphabet in decomposed:
+        if alphabet != '':
+            filtered.append(alphabet)
+    return filtered
 
 
 def refine_data(kbd_data, ui_data):
@@ -51,8 +78,44 @@ def refine_data(kbd_data, ui_data):
     return kbd_data_refined, ui_data_refined
 
 
+def refine_ime_data(ui_data_refined):
+    ui_data_kor_split = list()
+    ui_data_copy = deepcopy(ui_data_refined)
+
+    ui_data_kor_split.append(ui_data_copy[0])
+    for i in range(1, len(ui_data_refined)):
+        if ui_data_refined[i - 1][2] == "" and ui_data_refined[i][2] == "":
+            before = split(ui_data_refined[i - 1][1])
+            after = split(ui_data_refined[i][1])
+
+            if after[-1] in DOUBLE_JONG_LIST:
+                ui_data_copy[i] = list(ui_data_copy[i])
+                ui_data_copy[i][1] = DOUBLE_JONG_DICT[after[-1]][-1]
+            else:
+                ui_data_copy[i] = list(ui_data_copy[i])
+                ui_data_copy[i][1] = after[-1]
+        if ui_data_refined[i][2] == "":
+            text = ui_data_refined[i][3]
+            cursor = ui_data_refined[i][5]
+
+            text_to_list = list(text)
+            text_to_list.insert(cursor, ui_data_refined[i][1])
+            text = ''.join(text_to_list)
+            ui_data_copy[i] = list(ui_data_copy[i])
+            ui_data_copy[i][3] = text
+
+        ui_data_kor_split.append(ui_data_copy[i])
+    return ui_data_kor_split
+
+
 def list_to_pandas(d_type, d_list):
-    pass
+    df = pd.DataFrame(d_list, columns=["is_UI",
+                                       'KH_output',
+                                       'key_val_pyqt',
+                                       'Fullstring',
+                                       'KH_StartTime',
+                                       "KH_position"])
+    return df
 
 
 def align_two_timeseries(kbd_data, ui_data):
