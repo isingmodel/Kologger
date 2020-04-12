@@ -82,10 +82,8 @@ def refine_ime_data(ui_data_refined):
     ui_data_kor_split = list()
     ui_data_copy = deepcopy(ui_data_refined)
 
-    ui_data_kor_split.append(ui_data_copy[0])
-    for i in range(1, len(ui_data_refined)):
-        if ui_data_refined[i - 1][2] == "" and ui_data_refined[i][2] == "":
-            before = split(ui_data_refined[i - 1][1])
+    for i in range(len(ui_data_refined)):
+        if ui_data_refined[i][2] == "":
             after = split(ui_data_refined[i][1])
 
             if after[-1] in DOUBLE_JONG_LIST:

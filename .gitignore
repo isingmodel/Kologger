@@ -3,3 +3,7 @@
 __pycache__/
 qt_text_ui.pyc
 *.pkl
+*.ipynb
+.ipynb_checkpoints/*
+*.csv
+
