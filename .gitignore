@@ -6,4 +6,4 @@ qt_text_ui.pyc
 *.ipynb
 .ipynb_checkpoints/*
 *.csv
-
+.DS_Store

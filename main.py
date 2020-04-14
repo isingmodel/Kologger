@@ -10,6 +10,8 @@ import hgtk
 from copy import deepcopy
 import pandas as pd
 
+DOUBLE_JUNG_LIST = list('ㅘㅙㅚㅝㅞㅟㅢ')
+DOUBLE_JUNG_DICT = {'ㅘ':['ㅗ','ㅏ'],'ㅙ':['ㅗ','ㅐ'],'ㅚ':['ㅗ','ㅣ'],'ㅝ':['ㅜ','ㅓ'],'ㅞ':['ㅜ','ㅔ'],'ㅟ':['ㅜ','ㅣ'],'ㅢ':['ㅡ','ㅣ']}
 DOUBLE_JONG_LIST = list('ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ')
 DOUBLE_JONG_DICT = {'ㄳ': ['ㄱ', 'ㅅ'], 'ㄵ': ['ㄴ', 'ㅈ'], 'ㄶ': ['ㄴ', 'ㅎ'], 'ㄺ': ['ㄹ', 'ㄱ'],
                     'ㄻ': ['ㄹ', 'ㅁ'], 'ㄼ': ['ㄹ', 'ㅂ'], 'ㄽ': ['ㄹ', 'ㅅ'], 'ㄾ': ['ㄹ', 'ㅌ'],
@@ -89,6 +91,9 @@ def refine_ime_data(ui_data_refined):
             if after[-1] in DOUBLE_JONG_LIST:
                 ui_data_copy[i] = list(ui_data_copy[i])
                 ui_data_copy[i][1] = DOUBLE_JONG_DICT[after[-1]][-1]
+            elif after[-1] in DOUBLE_JUNG_LIST:
+                ui_data_copy[i] = list(ui_data_copy[i])
+                ui_data_copy[i][1] = DOUBLE_JUNG_DICT[after[-1]][-1]
             else:
                 ui_data_copy[i] = list(ui_data_copy[i])
                 ui_data_copy[i][1] = after[-1]
