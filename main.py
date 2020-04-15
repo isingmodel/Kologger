@@ -9,6 +9,7 @@ import keyboard_recorder as kr
 import qt_text_ui as ui
 import refine_data as rd
 
+# TODO: use log!
 
 def get_data_from_queue(d_q):
     pynput_data = list()
@@ -23,14 +24,15 @@ def get_data_from_queue(d_q):
 
                 pyqt_data.append(data)
 
-            elif data[0] == "exit":
+            elif data[0] == 2:
+                print("got exit message")
                 break
         except Empty:
             pass
         finally:
             time.sleep(0.001)
-    print("temp record savingr!")
-    d_q.put(("data_saving_started",))
+    print("temp record saving!")
+    d_q.put((3, None))
     with open(Path("./temp_data/keyboard_recording.pkl"), 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
     with open(Path("./temp_data/ui_data.pkl"), 'wb') as f_ui:
@@ -41,7 +43,7 @@ def get_data_from_queue(d_q):
     final_ui_data = rd.refine_ui_data(pyqt_data)
     ui_df = rd.list_to_pandas('ui', final_ui_data)
     ui_df.to_csv(Path("./ui_data.csv"))
-    d_q.put(("data_saving_finished",))
+    d_q.put((4, None))
 
 
 if __name__ == "__main__":

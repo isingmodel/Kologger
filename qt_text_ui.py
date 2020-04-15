@@ -6,7 +6,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton
-
+import sys
 
 class textbox(QPlainTextEdit):
     def __init__(self):
@@ -34,13 +34,16 @@ class CenterPane(QWidget):
         # self.objCntrPane.insertPlainText("write something")
 
     def save_and_exit(self):
-        self.data_queue.put(("exit",))
-
+        print("save and exit button clicked!")
+        self.objCntrPane.removeEventFilter(self)
+        self.data_queue.put((2, None)) # exit
+        time.sleep(1.5)
+        # TODO: Use different queue to exit safe!
         while True:
             try:
                 data = self.data_queue.get(block=False)
 
-                if data[0] == "data_saving_finished":
+                if data[0] == 4:
                     break
 
             except Empty:
@@ -48,8 +51,8 @@ class CenterPane(QWidget):
             finally:
                 time.sleep(0.01)
 
-        QtCore.QCoreApplication.instance().quit()
-        # sys.exit(0)
+        # QtCore.QCoreApplication.instance().quit()
+        sys.exit(0)
 
     def eventFilter(self, obj, event):
         if event.type() == 7:  # 7, 51, 6 is Eng, other input QkeyEvent
