@@ -85,8 +85,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(parent)
         winLeft = 200
         winTop = 200
-        winWidth = 800
-        winHeight = 900
+        winWidth = 700
+        winHeight = 600
 
         self.setWindowTitle('Main Window')
         self.setGeometry(winLeft, winTop, winWidth, winHeight)
