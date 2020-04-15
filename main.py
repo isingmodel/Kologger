@@ -29,7 +29,7 @@ def get_data_from_queue(d_q):
             pass
         finally:
             time.sleep(0.001)
-    print("temp recording!")
+    print("temp record savingr!")
     d_q.put(("data_saving_started",))
     with open(Path("./temp_data/keyboard_recording.pkl"), 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
@@ -37,8 +37,8 @@ def get_data_from_queue(d_q):
         pkl.dump(pyqt_data, f_ui)
 
     print("start converting")
-    kdb, ui = rd.refine_data(pynput_data, pyqt_data)
-    final_ui_data = rd.refine_ime_data(ui)
+    # kdb, ui = rd.refine_data(pynput_data, pyqt_data)
+    final_ui_data = rd.refine_ui_data(pyqt_data)
     ui_df = rd.list_to_pandas('ui', final_ui_data)
     ui_df.to_csv(Path("./ui_data.csv"))
     d_q.put(("data_saving_finished",))

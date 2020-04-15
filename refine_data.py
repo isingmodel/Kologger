@@ -46,8 +46,12 @@ def refine_ui_data(ui_data):
 
     for i in range(len(ui_data_refined)):
         if ui_data_refined[i][2] == "":
+
+            if ui_data_refined[i][1] == " ":
+                continue
             if len(ui_data_refined[i][1]) > 1:
                 continue
+
             after = split(ui_data_refined[i][1])
 
             if after[-1] in DOUBLE_JONG_LIST:
@@ -59,13 +63,14 @@ def refine_ui_data(ui_data):
             else:
                 ui_data_copy[i] = list(ui_data_copy[i])
                 ui_data_copy[i][1] = after[-1]
-        if ui_data_refined[i][2] == "":
+
+            # reformat whole text
             text = ui_data_refined[i][3]
             cursor = ui_data_refined[i][5]
-
             text_to_list = list(text)
             text_to_list.insert(cursor, ui_data_refined[i][1])
             text = ''.join(text_to_list)
+
             ui_data_copy[i] = list(ui_data_copy[i])
             ui_data_copy[i][3] = text
 
@@ -93,8 +98,8 @@ if __name__ == "__main__":
     with open(Path("./temp_data/ui_data.pkl"), 'rb') as f_ui:
         pyqt_data = pkl.load(f_ui)
     #
-    # for i in pyqt_data:
-    #     print(i)
+    for i in pyqt_data:
+        print(i)
     # print("start converting")
     # kbd_refined = refine_data_kbd(pynput_data)
 
