@@ -1,14 +1,15 @@
 import pickle as pkl
 import time
+from copy import deepcopy
 from multiprocessing import Process
 from multiprocessing import Queue
 from queue import Empty
 
+import hgtk
+import pandas as pd
+
 import keyboard_recorder as kr
 import qt_text_ui as ui
-import hgtk
-from copy import deepcopy
-import pandas as pd
 
 DOUBLE_JUNG_LIST = list('ㅘㅙㅚㅝㅞㅟㅢ')
 DOUBLE_JUNG_DICT = {'ㅘ':['ㅗ','ㅏ'],'ㅙ':['ㅗ','ㅐ'],'ㅚ':['ㅗ','ㅣ'],'ㅝ':['ㅜ','ㅓ'],'ㅞ':['ㅜ','ㅔ'],'ㅟ':['ㅜ','ㅣ'],'ㅢ':['ㅡ','ㅣ']}
@@ -35,9 +36,10 @@ def get_data_from_queue(d_q):
                 break
         except Empty:
             pass
-
-        time.sleep(0.001)
+        finally:
+            time.sleep(0.001)
     print("temp recording!")
+    d_q.put(("data_saving_started",))
     with open("./temp_data/keyboard_recording.pkl", 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
     with open("./temp_data/ui_data.pkl", 'wb') as f_ui:
@@ -52,6 +54,7 @@ def get_data_from_queue(d_q):
     final_ui_data = refine_ime_data(ui)
     ui_df = list_to_pandas('ui', final_ui_data)
     ui_df.to_csv("./ui_data.csv")
+    d_q.put(("data_saving_finished",))
 
 
 def split(letter):

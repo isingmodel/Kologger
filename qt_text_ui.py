@@ -1,5 +1,5 @@
-import sys
 import time
+from queue import Empty
 from sys import exit as sysExit
 
 from PyQt5 import QtCore
@@ -35,12 +35,24 @@ class CenterPane(QWidget):
 
     def save_and_exit(self):
         self.data_queue.put(("exit",))
-        # time.sleep(0.5)
+
+        while True:
+            try:
+                data = self.data_queue.get(block=False)
+
+                if data[0] == "data_saving_finished":
+                    break
+
+            except Empty:
+                pass
+            finally:
+                time.sleep(0.01)
+
         QtCore.QCoreApplication.instance().quit()
         # sys.exit(0)
 
     def eventFilter(self, obj, event):
-        if event.type() == 7:  # 7, 51, 6 is QkeyEvent
+        if event.type() == 7:  # 7, 51, 6 is Eng, other input QkeyEvent
             cursor_position = self.objCntrPane.textCursor().anchor()
             self.data_queue.put((1,
                                  event.text(),
@@ -50,7 +62,7 @@ class CenterPane(QWidget):
                                  cursor_position,
                                  ))
 
-        if event.type() == 83 and obj is self.objCntrPane:
+        if event.type() == 83 and obj is self.objCntrPane:  # IME language input
             cursor_position = self.objCntrPane.textCursor().anchor()
 
             self.data_queue.put((1,
@@ -71,10 +83,10 @@ class CenterPane(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, data_queue, p_save, p_keyboard, parent=None):
         super(MainWindow, self).__init__(parent)
-        winLeft = 100
-        winTop = 100
-        winWidth = 700
-        winHeight = 600
+        winLeft = 200
+        winTop = 200
+        winWidth = 800
+        winHeight = 900
 
         self.setWindowTitle('Main Window')
         self.setGeometry(winLeft, winTop, winWidth, winHeight)
