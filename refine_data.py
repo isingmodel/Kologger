@@ -46,6 +46,8 @@ def refine_ui_data(ui_data):
 
     for i in range(len(ui_data_refined)):
         if ui_data_refined[i][2] == "":
+            if len(ui_data_refined[i][1]) > 1:
+                continue
             after = split(ui_data_refined[i][1])
 
             if after[-1] in DOUBLE_JONG_LIST:
