@@ -3,7 +3,7 @@ import pandas as pd
 from copy import deepcopy
 from pathlib import Path
 import pickle as pkl
-
+import numpy as np
 DOUBLE_JUNG_LIST = list('ㅘㅙㅚㅝㅞㅟㅢ')
 DOUBLE_JUNG_DICT = {'ㅘ': ['ㅗ', 'ㅏ'], 'ㅙ': ['ㅗ', 'ㅐ'], 'ㅚ': ['ㅗ', 'ㅣ'], 'ㅝ': ['ㅜ', 'ㅓ'], 'ㅞ': ['ㅜ', 'ㅔ'],
                     'ㅟ': ['ㅜ', 'ㅣ'], 'ㅢ': ['ㅡ', 'ㅣ']}
@@ -123,8 +123,8 @@ def align_two_timeseries(kbd_data, ui_data):
 
 def refine_all_data(ui_d, key_d):
 
-    ui_d_refined = rd.refine_ui_data(ui_d)
-    key_d_refined = rd.refine_data_kbd(key_d)
+    ui_d_refined = refine_ui_data(ui_d)
+    key_d_refined = refine_data_kbd(key_d)
 
     ts = [click[4] for click in ui_d_refined]
     ts_eng = [click[3] for click in key_d_refined]
@@ -144,16 +144,12 @@ def refine_all_data(ui_d, key_d):
         else: 
             target_key = Korkey[i]
         candidate = np.searchsorted(ts_eng, ts[i], side='right')
-        print(candidate, max(candidate-8, 0), candidate+1)
         
         for key_idx in range(max(candidate-5, 0), candidate):
-            print(target_key, Engkey[key_idx], key_d_refined_2[key_idx][4])
             if target_key == Engkey[key_idx] and key_d_refined_2[key_idx][4] == 0:
                 ui_d_refined_2[i][4] = ts_eng[key_idx]
                 key_d_refined_2[key_idx][4] = 1
                 ui_d_refined_2[i][6] = 1
-                print(key_idx,ts_eng[key_idx],  ts[i], ts[i] - ts_eng[key_idx], target_key,
-                      Engkey[key_idx], key_d_refined_2[key_idx][4])
                 break
 
     ts_refined = np.array([i[4] for i in ui_d_refined_2])
@@ -169,11 +165,6 @@ def refine_all_data(ui_d, key_d):
         
                 
 
-
-
-
-
-
 if __name__ == "__main__":
     ui_p = "./_temp_sj/ui_data.pkl"
     key_p = "./_temp_sj/keyboard_recording.pkl"
@@ -183,6 +174,7 @@ if __name__ == "__main__":
     with open(key_p, 'rb') as f:
         key_d = pkl.load(f)
         
-    ui_d_refined = rd.refine_ui_data(ui_d)
-    key_d_refined = rd.refine_data_kbd(key_d)
+    # ui_d_refined = rd.refine_ui_data(ui_d)
+    # key_d_refined = rd.refine_data_kbd(key_d)
+    refine_all_data(ui_d, key_d)
 
