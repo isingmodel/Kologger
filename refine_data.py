@@ -12,6 +12,35 @@ DOUBLE_JONG_DICT = {'ㄳ': ['ㄱ', 'ㅅ'], 'ㄵ': ['ㄴ', 'ㅈ'], 'ㄶ': ['ㄴ',
                     'ㄻ': ['ㄹ', 'ㅁ'], 'ㄼ': ['ㄹ', 'ㅂ'], 'ㄽ': ['ㄹ', 'ㅅ'], 'ㄾ': ['ㄹ', 'ㅌ'],
                     'ㄿ': ['ㄹ', 'ㅍ'], 'ㅀ': ['ㄹ', 'ㅎ'], 'ㅄ': ['ㅂ', 'ㅅ']}
 
+kor = list("ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎㅛㅕㅑㅐㅒㅔㅖㅗㅓㅏㅣㅠㅜㅡ")
+eng = list("rRseEfaqQtTdwWczxvgyuioOpPhjklbnm")
+eng_alphabet = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+kor_to_eng_dict = dict()
+for i in range(len(eng)):
+    kor_to_eng_dict[kor[i]] = eng[i]
+
+kor_to_eng_dict['?'] = "?"
+kor_to_eng_dict['!'] = "!"
+kor_to_eng_dict['@'] = "@"
+kor_to_eng_dict['#'] = "#"
+kor_to_eng_dict['$'] = "$"
+kor_to_eng_dict['%'] = "%"
+kor_to_eng_dict['^'] = "^"
+kor_to_eng_dict['&'] = "&"
+kor_to_eng_dict['*'] = "*"
+kor_to_eng_dict['('] = "("
+kor_to_eng_dict[')'] = ")"
+kor_to_eng_dict['.'] = "."
+kor_to_eng_dict[','] = ","
+kor_to_eng_dict['~'] = "~"
+kor_to_eng_dict[':'] = ":"
+kor_to_eng_dict['/'] = "/"
+
+
+kor_to_eng_dict['\x08'] = 'Key.backspace'
+kor_to_eng_dict['\r'] = 'Key.enter'
+kor_to_eng_dict[' '] = 'Key.space'
+
 
 def split(letter):
     decomposed = hgtk.letter.decompose(letter)
@@ -34,7 +63,7 @@ def refine_ui_data(ui_data):
     ui_data_refined = list()
 
     for i in range(len(ui_data)):
-        if ui_data[i][1] == '' and ui_data[i][2] == '':
+        if ui_data[i][1] == '':
             continue
         elif ui_data[i][2] == 0:
             continue
@@ -92,17 +121,68 @@ def align_two_timeseries(kbd_data, ui_data):
     pass
 
 
-if __name__ == "__main__":
-    # with open(Path("./temp_data/keyboard_recording.pkl"), 'rb') as f_pynput:
-    #     pynput_data = pkl.load(f_pynput)
-    with open(Path("./temp_data/ui_data.pkl"), 'rb') as f_ui:
-        pyqt_data = pkl.load(f_ui)
-    #
-    for i in pyqt_data:
-        print(i)
-    # print("start converting")
-    # kbd_refined = refine_data_kbd(pynput_data)
+def refine_all_data(ui_d, key_d):
 
-    final_ui_data = refine_ui_data(pyqt_data)
-    ui_df = list_to_pandas('ui', final_ui_data)
-    ui_df.to_csv(Path("./ui_data.csv"))
+    ui_d_refined = rd.refine_ui_data(ui_d)
+    key_d_refined = rd.refine_data_kbd(key_d)
+
+    ts = [click[4] for click in ui_d_refined]
+    ts_eng = [click[3] for click in key_d_refined]
+    Engkey = [click[1] for click in key_d_refined]
+    ui_d_refined_2 = [list(click) for click in ui_d_refined]
+    key_d_refined_2 = [list(click) for click in key_d_refined]
+    for click in ui_d_refined_2:
+        click.append(0)
+    for click in key_d_refined_2:
+        click.append(0)
+    Korkey = [click[1] for click in ui_d_refined_2]
+
+
+    for i in range(len(Korkey)):
+        if Korkey[i] not in eng:
+            target_key = kor_to_eng_dict[Korkey[i]]
+        else: 
+            target_key = Korkey[i]
+        candidate = np.searchsorted(ts_eng, ts[i], side='right')
+        print(candidate, max(candidate-8, 0), candidate+1)
+        
+        for key_idx in range(max(candidate-5, 0), candidate):
+            print(target_key, Engkey[key_idx], key_d_refined_2[key_idx][4])
+            if target_key == Engkey[key_idx] and key_d_refined_2[key_idx][4] == 0:
+                ui_d_refined_2[i][4] = ts_eng[key_idx]
+                key_d_refined_2[key_idx][4] = 1
+                ui_d_refined_2[i][6] = 1
+                print(key_idx,ts_eng[key_idx],  ts[i], ts[i] - ts_eng[key_idx], target_key,
+                      Engkey[key_idx], key_d_refined_2[key_idx][4])
+                break
+
+    ts_refined = np.array([i[4] for i in ui_d_refined_2])
+    temp = ts_refined.argsort()
+    ranks = np.empty_like(temp)
+    ranks[temp] = np.arange(len(ts_refined))
+
+    ui_d_refined_3 = list()
+    for rank in ranks:
+        ui_d_refined_3.append(ui_d_refined_2[rank])
+
+    return ui_d_refined_3
+        
+                
+
+
+
+
+
+
+if __name__ == "__main__":
+    ui_p = "./_temp_sj/ui_data.pkl"
+    key_p = "./_temp_sj/keyboard_recording.pkl"
+
+    with open(ui_p, 'rb') as f:
+        ui_d = pkl.load(f)
+    with open(key_p, 'rb') as f:
+        key_d = pkl.load(f)
+        
+    ui_d_refined = rd.refine_ui_data(ui_d)
+    key_d_refined = rd.refine_data_kbd(key_d)
+
