@@ -83,7 +83,10 @@ def refine_ui_data(ui_data):
             text = ui_data_refined[i][3]
             cursor = ui_data_refined[i][5]
             text_to_list = list(text)
-            text_to_list.insert(cursor, ui_data_refined[i][1])
+            current_key = ui_data_refined[i][1]
+            if current_key == "\r":
+                current_key = "\\n"
+            text_to_list.insert(cursor, current_key)
             text = ''.join(text_to_list)
 
             ui_data_copy[i] = list(ui_data_copy[i])
