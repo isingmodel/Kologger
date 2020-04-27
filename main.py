@@ -40,8 +40,11 @@ def get_data_from_queue(d_q):
 
     print("start converting")
     # kdb, ui = rd.refine_data(pynput_data, pyqt_data)
-    final_ui_data = rd.refine_ui_data(pyqt_data)
-    ui_df = rd.list_to_pandas('ui', final_ui_data)
+
+    # r_ui_data = rd.refine_ui_data(pyqt_data)
+    refined_data = rd.refine_all_data(pyqt_data, pynput_data)
+
+    ui_df = rd.list_to_pandas('ui', refined_data)
     ui_df.to_csv(Path("./ui_data.csv"))
     d_q.put((4, None))
 

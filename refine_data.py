@@ -19,27 +19,11 @@ kor_to_eng_dict = dict()
 for i in range(len(eng)):
     kor_to_eng_dict[kor[i]] = eng[i]
 
-kor_to_eng_dict['?'] = "?"
-kor_to_eng_dict['!'] = "!"
-kor_to_eng_dict['@'] = "@"
-kor_to_eng_dict['#'] = "#"
-kor_to_eng_dict['$'] = "$"
-kor_to_eng_dict['%'] = "%"
-kor_to_eng_dict['^'] = "^"
-kor_to_eng_dict['&'] = "&"
-kor_to_eng_dict['*'] = "*"
-kor_to_eng_dict['('] = "("
-kor_to_eng_dict[')'] = ")"
-kor_to_eng_dict['.'] = "."
-kor_to_eng_dict[','] = ","
-kor_to_eng_dict['~'] = "~"
-kor_to_eng_dict[':'] = ":"
-kor_to_eng_dict['/'] = "/"
 
-
-kor_to_eng_dict['\x08'] = 'Key.backspace'
-kor_to_eng_dict['\r'] = 'Key.enter'
-kor_to_eng_dict[' '] = 'Key.space'
+special_key_dict = dict()
+special_key_dict['\x08'] = 'Key.backspace'
+special_key_dict['\r'] = 'Key.enter'
+special_key_dict[' '] = 'Key.space'
 
 
 def split(letter):
@@ -74,8 +58,10 @@ def refine_ui_data(ui_data):
     ui_data_copy = deepcopy(ui_data_refined)
 
     for i in range(len(ui_data_refined)):
+        if ui_data_refined[i][1] == '\x7f':
+                continue
         if ui_data_refined[i][2] == "":
-
+            
             if ui_data_refined[i][1] == " ":
                 continue
             if len(ui_data_refined[i][1]) > 1:
@@ -139,10 +125,16 @@ def refine_all_data(ui_d, key_d):
 
 
     for i in range(len(Korkey)):
-        if Korkey[i] not in eng:
-            target_key = kor_to_eng_dict[Korkey[i]]
-        else: 
+        if Korkey[i] in eng: 
             target_key = Korkey[i]
+        elif Korkey[i] in kor:
+            target_key = kor_to_eng_dict[Korkey[i]]
+        elif len(Korkey[i]) == 1 and Korkey[i] != " ":
+            target_key = Korkey[i]
+        else:
+            target_key = special_key_dict[Korkey[i]]
+
+        
         candidate = np.searchsorted(ts_eng, ts[i], side='right')
         
         for key_idx in range(max(candidate-5, 0), candidate):
