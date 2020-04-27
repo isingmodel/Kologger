@@ -159,7 +159,12 @@ def refine_all_data(ui_d, key_d):
 
     ui_d_refined_3 = list()
     for rank in ranks:
-        ui_d_refined_3.append(ui_d_refined_2[rank])
+        ui_d_refined_3.append(ui_d_refined_2[rank][:6])
+
+    for i in range(len(ui_d_refined_3)):
+        if ui_d_refined_3[i][1] == '\r':
+            ui_d_refined_3[i][1] = 'Enter_Key'
+
 
     return ui_d_refined_3
         
@@ -173,8 +178,8 @@ if __name__ == "__main__":
         ui_d = pkl.load(f)
     with open(key_p, 'rb') as f:
         key_d = pkl.load(f)
-        
-    # ui_d_refined = rd.refine_ui_data(ui_d)
-    # key_d_refined = rd.refine_data_kbd(key_d)
-    refine_all_data(ui_d, key_d)
+    refined_data = refine_all_data(ui_d, key_d)
+    ui_df = list_to_pandas('ui', refined_data)
+    ui_df.to_csv(Path("./ui_data_sj.csv"))
+
 
