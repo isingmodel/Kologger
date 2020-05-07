@@ -27,9 +27,25 @@ class GetKeyboardData(Process):
         finally:
             self.data_queue.put((0, key_value, key_type, time.time()))
 
+
+    def on_release(key_data):
+        ts = time.time()
+        key_value = None
+        key_type = None
+        try:
+            key_value = str(key_data.char)
+            key_type = "char"
+        except AttributeError:
+            key_value = str(key_data)
+            key_type = "else"
+        finally:
+            self.data_queue.put((3, key_value, key_type, time.time()))
+
+
     def run(self):
         print("keyboard listener start!")
-        listener = keyboard.Listener(on_press=self.on_press)
+        listener = keyboard.Listener(on_press = self.on_press, 
+                                     on_release = self.on_release)
         listener.start()
         listener.join()
 

@@ -17,7 +17,7 @@ def get_data_from_queue(d_q):
     while True:
         try:
             data = d_q.get(block=False)
-
+            # if data[0] == (0 or 3):
             if data[0] == 0:
                 pynput_data.append(data)
             elif data[0] == 1:
