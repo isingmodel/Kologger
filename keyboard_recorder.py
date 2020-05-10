@@ -25,7 +25,7 @@ class GetKeyboardData(Process):
             key_value = str(key_data)
             key_type = "else"
         finally:
-            self.data_queue.put((0, key_value, key_type, time.time()))
+            self.data_queue.put((0, key_value, key_type, time.time(), 'press'))
 
 
     def on_release(self, key_data):
@@ -39,7 +39,7 @@ class GetKeyboardData(Process):
             key_value = str(key_data)
             key_type = "else"
         finally:
-            self.data_queue.put((3, key_value, key_type, time.time()))
+            self.data_queue.put((0, key_value, key_type, time.time(),'release'))
 
 
     def run(self):

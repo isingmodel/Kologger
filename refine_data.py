@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import pickle as pkl
 import numpy as np
+from pprint import pprint
 DOUBLE_JUNG_LIST = list('ㅘㅙㅚㅝㅞㅟㅢ')
 DOUBLE_JUNG_DICT = {'ㅘ': ['ㅗ', 'ㅏ'], 'ㅙ': ['ㅗ', 'ㅐ'], 'ㅚ': ['ㅗ', 'ㅣ'], 'ㅝ': ['ㅜ', 'ㅓ'], 'ㅞ': ['ㅜ', 'ㅔ'],
                     'ㅟ': ['ㅜ', 'ㅣ'], 'ㅢ': ['ㅡ', 'ㅣ']}
@@ -24,7 +25,6 @@ special_key_dict = dict()
 special_key_dict['\x08'] = 'Key.backspace'
 special_key_dict['\r'] = 'Key.enter'
 special_key_dict[' '] = 'Key.space'
-
 
 def split(letter):
     decomposed = hgtk.letter.decompose(letter)
@@ -106,49 +106,74 @@ def list_to_pandas(d_type, d_list):
                                        'key_val_pyqt',
                                        'Fullstring',
                                        'KH_StartTime',
-                                       "KH_position"])
+                                       "KH_position",
+                                       'KH_ReleaseTime'])
     return df
 
 
-def align_two_timeseries(kbd_data, ui_data):
-    pass
-
+def match_pynput_press_release(key_d):
+    key_data = [list(i) for i in key_d if i[4] =='press']
+    # print(key_d)
+    release_data = [list(i) for i in key_d if i[4] =='release']
+    press_data_len = len(key_data)
+    for idx, press_key in enumerate(key_data):
+    #     print(idx, release_data[idx])
+        idx_search = idx-3
+        while True:
+            # print(press_key[1], release_data[idx_search][1])
+            if press_data_len == idx_search:
+                print("find release key error")
+                break
+            elif press_key[1] == release_data[idx_search][1] and release_data[idx_search][4] == "release":
+                # print(key_data[idx][3] - release_data[idx_search][3])
+                key_data[idx][4] = release_data[idx_search][3]
+                release_data[idx_search][4] = "done"
+                break
+            else:
+                idx_search += 1
+    # print(key_data)
+    return key_data                
 
 def refine_all_data(ui_d, key_d):
 
     ui_d_refined = refine_ui_data_init(ui_d)
-    key_d_refined = refine_data_kbd_init(key_d)
-
+    # print(ui_d_refined)
+    key_d_refined = match_pynput_press_release(refine_data_kbd_init(key_d))
     ts = [click[4] for click in ui_d_refined]
-    ts_eng = [click[3] for click in key_d_refined]
+    ts_eng_press = [click[3] for click in key_d_refined]
+    ts_eng_release = [click[4] for click in key_d_refined]
     Engkey = [click[1] for click in key_d_refined]
     ui_d_refined_2 = [list(click) for click in ui_d_refined]
     key_d_refined_2 = [list(click) for click in key_d_refined]
     for click in ui_d_refined_2:
-        click.append(0)
+        click += [0., 0.]
     for click in key_d_refined_2:
-        click.append(0)
+        click += [0., 0.]
     Korkey = [click[1] for click in ui_d_refined_2]
 
 
-    for i in range(len(Korkey)):
-        if Korkey[i] in eng: 
-            target_key = Korkey[i]
-        elif Korkey[i] in kor:
-            target_key = kor_to_eng_dict[Korkey[i]]
-        elif len(Korkey[i]) == 1 and Korkey[i] != " ":
-            target_key = Korkey[i]
+    for kor_idx in range(len(Korkey)):
+        if Korkey[kor_idx] == "\x08":
+            target_key = special_key_dict[Korkey[kor_idx]]
+        elif Korkey[kor_idx] in eng: 
+            target_key = Korkey[kor_idx]
+        elif Korkey[kor_idx] in kor:
+            target_key = kor_to_eng_dict[Korkey[kor_idx]]
+        elif len(Korkey[kor_idx]) == 1 and Korkey[kor_idx] != " ":
+            target_key = Korkey[kor_idx]
         else:
-            target_key = special_key_dict[Korkey[i]]
-
+            target_key = special_key_dict[Korkey[kor_idx]]
         
-        candidate = np.searchsorted(ts_eng, ts[i], side='right')
+        candidate = np.searchsorted(ts_eng_press, ts[kor_idx], side='right')
         
         for key_idx in range(max(candidate-5, 0), candidate):
-            if target_key == Engkey[key_idx] and key_d_refined_2[key_idx][4] == 0:
-                ui_d_refined_2[i][4] = ts_eng[key_idx]
-                key_d_refined_2[key_idx][4] = 1
-                ui_d_refined_2[i][6] = 1
+            if target_key == Engkey[key_idx] and key_d_refined_2[key_idx][5] == 0:
+                ui_d_refined_2[kor_idx][4] = ts_eng_press[key_idx]
+                ui_d_refined_2[kor_idx][6] = ts_eng_release[key_idx]
+                key_d_refined_2[key_idx][5] = 1
+
+                ui_d_refined_2[kor_idx][7] = 1 # need it?
+
                 break
 
     ts_refined = np.array([i[4] for i in ui_d_refined_2])
@@ -158,7 +183,7 @@ def refine_all_data(ui_d, key_d):
 
     ui_d_refined_3 = list()
     for rank in ranks:
-        ui_d_refined_3.append(ui_d_refined_2[rank][:6])
+        ui_d_refined_3.append(ui_d_refined_2[rank][:7])
     
     for i in range(len(ui_d_refined_3)):
         if ui_d_refined_3[i][1] == '\r':
@@ -171,25 +196,29 @@ def refine_all_data(ui_d, key_d):
                 ui3_ts = np.array([u[4] for u in ui_d_refined_3])
                 key_idx = np.searchsorted(ui3_ts, pynput_key[3])
                 # todo: need to support key_idx = 0
-                ui_before = ui_d_refined_3[key_idx-1]
-                new_input = [1, pynput_key[1], "", ui_before[3], pynput_key[3], ui_before[5]]
+                if key_idx != 0:
+                    ui_before = ui_d_refined_3[key_idx-1]
+                    new_input = [1, pynput_key[1], "", ui_before[3], pynput_key[3], ui_before[5], pynput_key[4]]
+                else:
+                    new_input = [1, pynput_key[1], "", "", pynput_key[3], 0, pynput_key[4]]
                 ui_d_refined_3.insert(key_idx, new_input)
 
     return ui_d_refined_3
-        
    
 
 if __name__ == "__main__":
-    ui_p = "./_temp_sj/ui_data.pkl"
-    key_p = "./_temp_sj/keyboard_recording.pkl"
+    ui_p = "./temp_data/ui_data.pkl"
+    key_p = "./temp_data/keyboard_recording.pkl"
 
     with open(ui_p, 'rb') as f:
         ui_d = pkl.load(f)
     with open(key_p, 'rb') as f:
         key_d = pkl.load(f)
-    print(refine_data_kbd_init(key_d))
-    # refined_data = refine_all_data(ui_d, key_d)
-    # ui_df = list_to_pandas('ui', refined_data)
-    # ui_df.to_csv(Path("./ui_data_sj.csv"))
+    # print(key_d)
+    # print(refine_data_kbd_init(key_d))
+    refined_data = refine_all_data(ui_d, key_d)
+    # pprint(refined_data)
+    ui_df = list_to_pandas('ui', refined_data)
+    ui_df.to_csv(Path("./ui_data_sj.csv"))
 
 
