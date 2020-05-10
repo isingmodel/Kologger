@@ -35,17 +35,18 @@ def split(letter):
     return filtered
 
 
-def refine_data_kbd(kbd_data):
+def refine_data_kbd_init(kbd_data):
     kbd_data_refined = list()
+    # delete useless "None"
     for i in range(len(kbd_data)):
         if kbd_data[i][1] != "None":
             kbd_data_refined.append(kbd_data[i])
     return kbd_data_refined
 
 
-def refine_ui_data(ui_data):
+def refine_ui_data_init(ui_data):
     ui_data_refined = list()
-
+    # delete usless ""d
     for i in range(len(ui_data)):
         if ui_data[i][1] == '':
             continue
@@ -58,17 +59,20 @@ def refine_ui_data(ui_data):
     ui_data_copy = deepcopy(ui_data_refined)
 
     for i in range(len(ui_data_refined)):
+        ui_data_copy[i] = list(ui_data_copy[i])
         if ui_data_refined[i][1] == '\x7f':
                 continue
+
         if ui_data_refined[i][2] == "":
             
+            # useless
             if ui_data_refined[i][1] == " ":
                 continue
             if len(ui_data_refined[i][1]) > 1:
                 continue
 
+            # return korean input alphabet
             after = split(ui_data_refined[i][1])
-
             if after[-1] in DOUBLE_JONG_LIST:
                 ui_data_copy[i] = list(ui_data_copy[i])
                 ui_data_copy[i][1] = DOUBLE_JONG_DICT[after[-1]][-1]
@@ -79,7 +83,7 @@ def refine_ui_data(ui_data):
                 ui_data_copy[i] = list(ui_data_copy[i])
                 ui_data_copy[i][1] = after[-1]
 
-            # reformat whole text
+            # reformat whole text with input alphabet
             text = ui_data_refined[i][3]
             cursor = ui_data_refined[i][5]
             text_to_list = list(text)
@@ -112,8 +116,8 @@ def align_two_timeseries(kbd_data, ui_data):
 
 def refine_all_data(ui_d, key_d):
 
-    ui_d_refined = refine_ui_data(ui_d)
-    key_d_refined = refine_data_kbd(key_d)
+    ui_d_refined = refine_ui_data_init(ui_d)
+    key_d_refined = refine_data_kbd_init(key_d)
 
     ts = [click[4] for click in ui_d_refined]
     ts_eng = [click[3] for click in key_d_refined]
@@ -155,15 +159,25 @@ def refine_all_data(ui_d, key_d):
     ui_d_refined_3 = list()
     for rank in ranks:
         ui_d_refined_3.append(ui_d_refined_2[rank][:6])
-
+    
     for i in range(len(ui_d_refined_3)):
         if ui_d_refined_3[i][1] == '\r':
-            ui_d_refined_3[i][1] = 'Enter_Key'
-
+            ui_d_refined_3[i][1] = 'Key.Enter'
+        if ui_d_refined_3[i][1] == '\x08':
+            ui_d_refined_3[i][1] = 'Key.backspace'
+    for pynput_key in key_d_refined_2:
+        if pynput_key[1].startswith("Key"):
+            if pynput_key[1] not in ['Key.Enter', 'Key.backspace']:
+                ui3_ts = np.array([u[4] for u in ui_d_refined_3])
+                key_idx = np.searchsorted(ui3_ts, pynput_key[3])
+                # todo: need to support key_idx = 0
+                ui_before = ui_d_refined_3[key_idx-1]
+                new_input = [1, pynput_key[1], "", ui_before[3], pynput_key[3], ui_before[5]]
+                ui_d_refined_3.insert(key_idx, new_input)
 
     return ui_d_refined_3
         
-                
+   
 
 if __name__ == "__main__":
     ui_p = "./_temp_sj/ui_data.pkl"
@@ -173,8 +187,9 @@ if __name__ == "__main__":
         ui_d = pkl.load(f)
     with open(key_p, 'rb') as f:
         key_d = pkl.load(f)
-    refined_data = refine_all_data(ui_d, key_d)
-    ui_df = list_to_pandas('ui', refined_data)
-    ui_df.to_csv(Path("./ui_data_sj.csv"))
+    print(refine_data_kbd_init(key_d))
+    # refined_data = refine_all_data(ui_d, key_d)
+    # ui_df = list_to_pandas('ui', refined_data)
+    # ui_df.to_csv(Path("./ui_data_sj.csv"))
 
 

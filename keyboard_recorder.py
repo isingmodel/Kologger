@@ -28,7 +28,7 @@ class GetKeyboardData(Process):
             self.data_queue.put((0, key_value, key_type, time.time()))
 
 
-    def on_release(key_data):
+    def on_release(self, key_data):
         ts = time.time()
         key_value = None
         key_type = None
@@ -51,4 +51,3 @@ class GetKeyboardData(Process):
 
         return listener
 
-#
