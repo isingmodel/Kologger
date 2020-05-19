@@ -9,6 +9,7 @@ import keyboard_recorder as kr
 import qt_text_ui as ui
 import refine_data as rd
 
+
 # TODO: use log!
 
 def get_data_from_queue(d_q):

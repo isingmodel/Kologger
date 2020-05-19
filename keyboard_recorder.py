@@ -27,7 +27,6 @@ class GetKeyboardData(Process):
         finally:
             self.data_queue.put((0, key_value, key_type, time.time(), 'press'))
 
-
     def on_release(self, key_data):
         ts = time.time()
         key_value = None
@@ -39,15 +38,13 @@ class GetKeyboardData(Process):
             key_value = str(key_data)
             key_type = "else"
         finally:
-            self.data_queue.put((0, key_value, key_type, time.time(),'release'))
-
+            self.data_queue.put((0, key_value, key_type, time.time(), 'release'))
 
     def run(self):
         print("keyboard listener start!")
-        listener = keyboard.Listener(on_press = self.on_press, 
-                                     on_release = self.on_release)
+        listener = keyboard.Listener(on_press=self.on_press,
+                                     on_release=self.on_release)
         listener.start()
         listener.join()
 
         return listener
-

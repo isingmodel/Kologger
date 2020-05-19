@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton
 import sys
 
+
 class textbox(QPlainTextEdit):
     def __init__(self):
         QPlainTextEdit.__init__(self)
@@ -36,7 +37,7 @@ class CenterPane(QWidget):
     def save_and_exit(self):
         print("save and exit button clicked!")
         self.objCntrPane.removeEventFilter(self)
-        self.data_queue.put((2, None)) # exit
+        self.data_queue.put((2, None))  # exit
         time.sleep(1.5)
         # TODO: Use different queue to exit safe!
         while True:

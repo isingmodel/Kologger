@@ -1,10 +1,10 @@
-import hgtk
-import pandas as pd
+import pickle as pkl
 from copy import deepcopy
 from pathlib import Path
-import pickle as pkl
+
+import hgtk
 import numpy as np
-from pprint import pprint
+import pandas as pd
 
 DOUBLE_JUNG_LIST = list('ㅘㅙㅚㅝㅞㅟㅢ')
 DOUBLE_JUNG_DICT = {'ㅘ': ['ㅗ', 'ㅏ'], 'ㅙ': ['ㅗ', 'ㅐ'], 'ㅚ': ['ㅗ', 'ㅣ'], 'ㅝ': ['ㅜ', 'ㅓ'], 'ㅞ': ['ㅜ', 'ㅔ'],
