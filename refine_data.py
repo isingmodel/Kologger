@@ -1,3 +1,4 @@
+import copy
 import pickle as pkl
 from copy import deepcopy
 from pathlib import Path
@@ -23,7 +24,7 @@ for i in range(len(eng)):
 
 special_key_dict = dict()
 special_key_dict['\x08'] = 'Key.backspace'
-special_key_dict['\r'] = 'Key.enter'
+special_key_dict['Key.enter'] = 'Key.enter'
 special_key_dict[' '] = 'Key.space'
 
 
@@ -47,55 +48,68 @@ def refine_data_kbd_init(kbd_data):
 
 def refine_ui_data_init(ui_data):
     ui_data_refined = list()
-    # delete usless ""d
+    ui_data_kor_split = list()
+
+    # delete usless ""
     for i in range(len(ui_data)):
         if ui_data[i][1] == '':
             continue
         elif ui_data[i][2] == 0:
             continue
-        else:
-            ui_data_refined.append(ui_data[i])
-
-    ui_data_kor_split = list()
-    ui_data_copy = deepcopy(ui_data_refined)
-
-    for i in range(len(ui_data_refined)):
-        ui_data_copy[i] = list(ui_data_copy[i])
-        if ui_data_refined[i][1] == '\x7f':
+        elif ui_data[i][1] == '\x7f':
             continue
+        elif ui_data[i][2] == "" and ui_data[i][1] == " ":
+            continue
+        elif ui_data[i][2] == "" and len(ui_data[i][1]) > 1:
+            continue
+        else:
+            ui_data_refined.append(list(ui_data[i]))
 
-        if ui_data_refined[i][2] == "":
-
-            # useless
-            if ui_data_refined[i][1] == " ":
-                continue
-            if len(ui_data_refined[i][1]) > 1:
-                continue
-
+    ui_data_copy = deepcopy(ui_data_refined)
+    splitted_ime_saved_before = list("")
+    whole_text_before = ""
+    for i in range(len(ui_data_refined)):
+        if ui_data_refined[i][2] == "":  # korean input converting
             # return korean input alphabet
-            after = split(ui_data_refined[i][1])
-            if after[-1] in DOUBLE_JONG_LIST:
-                ui_data_copy[i] = list(ui_data_copy[i])
-                ui_data_copy[i][1] = DOUBLE_JONG_DICT[after[-1]][-1]
-            elif after[-1] in DOUBLE_JUNG_LIST:
-                ui_data_copy[i] = list(ui_data_copy[i])
-                ui_data_copy[i][1] = DOUBLE_JUNG_DICT[after[-1]][-1]
+
+            splitted_ime = split(ui_data_refined[i][1])
+
+            # double alphabets
+            if splitted_ime[-1] in DOUBLE_JONG_LIST:
+                last_alphabet = copy.deepcopy(splitted_ime[-1])
+                del splitted_ime[-1]
+                splitted_ime += DOUBLE_JONG_DICT[last_alphabet]
+            elif splitted_ime[-1] in DOUBLE_JUNG_LIST:
+                last_alphabet = copy.deepcopy(splitted_ime[-1])
+                del splitted_ime[-1]
+                splitted_ime += DOUBLE_JUNG_DICT[last_alphabet]
+
+            if len(splitted_ime_saved_before) >= 2 and \
+                    splitted_ime_saved_before[-2] == splitted_ime[-1] and \
+                    len(splitted_ime_saved_before) > len(splitted_ime) and \
+                    whole_text_before == ui_data_copy[i][3]:
+                ui_data_copy[i][1] = "\x08"
             else:
-                ui_data_copy[i] = list(ui_data_copy[i])
-                ui_data_copy[i][1] = after[-1]
+                ui_data_copy[i][1] = splitted_ime[-1]
+
+            splitted_ime_saved_before = copy.deepcopy(splitted_ime)
+            whole_text_before = copy.deepcopy(ui_data_copy[i][3])
+
+            #             print(splitted_ime, splitted_ime[-1])
 
             # reformat whole text with input alphabet
             text = ui_data_refined[i][3]
             cursor = ui_data_refined[i][5]
             text_to_list = list(text)
             current_key = ui_data_refined[i][1]
-            if current_key == "\r":
-                current_key = "\\n"
+
             text_to_list.insert(cursor, current_key)
             text = ''.join(text_to_list)
 
             ui_data_copy[i] = list(ui_data_copy[i])
             ui_data_copy[i][3] = text
+        if ui_data_copy[i][1] == "\r":
+            ui_data_copy[i][1] = "Key.enter"
 
         ui_data_kor_split.append(ui_data_copy[i])
     return ui_data_kor_split
@@ -139,21 +153,26 @@ def match_pynput_press_release(key_d):
 
 def refine_all_data(ui_d, key_d):
     ui_d_refined = refine_ui_data_init(ui_d)
-    # print(ui_d_refined)
     key_d_refined = match_pynput_press_release(refine_data_kbd_init(key_d))
+
     ts = [click[4] for click in ui_d_refined]
     ts_eng_press = [click[3] for click in key_d_refined]
     ts_eng_release = [click[4] for click in key_d_refined]
     Engkey = [click[1] for click in key_d_refined]
-    ui_d_refined_2 = [list(click) for click in ui_d_refined]
-    key_d_refined_2 = [list(click) for click in key_d_refined]
+    Korkey = [click[1] for click in ui_d_refined]
+
+    # todo: delete this conversion
+    ui_d_refined_2 = ui_d_refined
+    key_d_refined_2 = key_d_refined
+
+    # press, release time init
     for click in ui_d_refined_2:
         click += [0., 0.]
     for click in key_d_refined_2:
         click += [0., 0.]
-    Korkey = [click[1] for click in ui_d_refined_2]
 
     for kor_idx in range(len(Korkey)):
+
         if Korkey[kor_idx] == "\x08":
             target_key = special_key_dict[Korkey[kor_idx]]
         elif Korkey[kor_idx] in eng:
@@ -164,17 +183,16 @@ def refine_all_data(ui_d, key_d):
             target_key = Korkey[kor_idx]
         else:
             target_key = special_key_dict[Korkey[kor_idx]]
-
+        #             print(Korkey[kor_idx], target_key)
+        #         print(kor_idx, Korkey[kor_idx], "target_key", target_key)
         candidate = np.searchsorted(ts_eng_press, ts[kor_idx], side='right')
-
-        for key_idx in range(max(candidate - 5, 0), candidate):
+        for key_idx in range(max(candidate - 3, 0), candidate):
             if target_key == Engkey[key_idx] and key_d_refined_2[key_idx][5] == 0:
                 ui_d_refined_2[kor_idx][4] = ts_eng_press[key_idx]
                 ui_d_refined_2[kor_idx][6] = ts_eng_release[key_idx]
                 key_d_refined_2[key_idx][5] = 1
 
                 ui_d_refined_2[kor_idx][7] = 1  # need it?
-
                 break
 
     ts_refined = np.array([i[4] for i in ui_d_refined_2])
@@ -193,6 +211,7 @@ def refine_all_data(ui_d, key_d):
             ui_d_refined_3[i][1] = 'Key.backspace'
     for pynput_key in key_d_refined_2:
         if pynput_key[1].startswith("Key"):
+            # todo: check this one
             if pynput_key[1] not in ['Key.enter', 'Key.backspace']:
                 ui3_ts = np.array([u[4] for u in ui_d_refined_3])
                 key_idx = np.searchsorted(ui3_ts, pynput_key[3])
@@ -208,8 +227,8 @@ def refine_all_data(ui_d, key_d):
 
 
 if __name__ == "__main__":
-    ui_p = "./temp_data/ui_data.pkl"
-    key_p = "./temp_data/keyboard_recording.pkl"
+    ui_p = "./temp_data_sj/ui_data.pkl"
+    key_p = "./temp_data_sj/keyboard_recording.pkl"
 
     with open(ui_p, 'rb') as f:
         ui_d = pkl.load(f)
@@ -220,4 +239,4 @@ if __name__ == "__main__":
     refined_data = refine_all_data(ui_d, key_d)
     # pprint(refined_data)
     ui_df = list_to_pandas('ui', refined_data)
-    ui_df.to_csv(Path("./ui_data_sj.csv"))
+    ui_df.to_csv(Path("./ui_data_test.csv"))
