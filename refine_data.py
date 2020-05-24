@@ -14,6 +14,15 @@ DOUBLE_JONG_LIST = list('ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ')
 DOUBLE_JONG_DICT = {'ㄳ': ['ㄱ', 'ㅅ'], 'ㄵ': ['ㄴ', 'ㅈ'], 'ㄶ': ['ㄴ', 'ㅎ'], 'ㄺ': ['ㄹ', 'ㄱ'],
                     'ㄻ': ['ㄹ', 'ㅁ'], 'ㄼ': ['ㄹ', 'ㅂ'], 'ㄽ': ['ㄹ', 'ㅅ'], 'ㄾ': ['ㄹ', 'ㅌ'],
                     'ㄿ': ['ㄹ', 'ㅍ'], 'ㅀ': ['ㄹ', 'ㅎ'], 'ㅄ': ['ㅂ', 'ㅅ']}
+capital_to_small_dict = {'A': 'a', 'B': 'b', 'C': 'c', 'D': 'd', 'E': 'e', 'F': 'f', 'G': 'g',
+                         'H': 'h', 'I': 'i', 'J': 'j', 'K': 'k', 'L': 'l', 'M': 'm', 'N': 'n',
+                         'O': 'o', 'P': 'p', 'Q': 'q', 'R': 'r', 'S': 's', 'T': 't', 'U': 'u',
+                         'V': 'v', 'W': 'w', 'X': 'x', 'Y': 'y', 'Z': 'z', 'a': 'A', 'b': 'B',
+                         'c': 'C', 'd': 'D', 'e': 'E', 'f': 'F', 'g': 'G',
+                         'h': 'H', 'i': 'I', 'j': 'J', 'k': 'K', 'l': 'L', 'm': 'M', 'n': 'N',
+                         'o': 'O', 'p': 'P', 'q': 'Q', 'r': 'R', 's': 'S', 't': 'T', 'u': 'U',
+                         'v': 'V', 'w': 'W', 'x': 'X', 'y': 'Y', 'z': 'Z'}
+
 
 kor = list("ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎㅛㅕㅑㅐㅒㅔㅖㅗㅓㅏㅣㅠㅜㅡ")
 eng = list("rRseEfaqQtTdwWczxvgyuioOpPhjklbnm")
@@ -26,6 +35,7 @@ special_key_dict = dict()
 special_key_dict['\x08'] = 'Key.backspace'
 special_key_dict['Key.enter'] = 'Key.enter'
 special_key_dict[' '] = 'Key.space'
+special_key_dict['Key.space'] = 'Key.space'
 
 
 def split(letter):
@@ -110,6 +120,8 @@ def refine_ui_data_init(ui_data):
             ui_data_copy[i][3] = text
         if ui_data_copy[i][1] == "\r":
             ui_data_copy[i][1] = "Key.enter"
+        if ui_data_copy[i][1] == " ":
+            ui_data_copy[i][1] = "Key.space"
 
         ui_data_kor_split.append(ui_data_copy[i])
     return ui_data_kor_split
@@ -130,24 +142,28 @@ def match_pynput_press_release(key_d):
     key_data = [list(i) for i in key_d if i[4] == 'press']
     # print(key_d)
     release_data = [list(i) for i in key_d if i[4] == 'release']
+    release_data_ts = [i[3] for i in key_d if i[4] == 'release']
+    press_data_ts = [i[3] for i in key_d if i[4] == 'press']
     press_data_len = len(key_data)
+#     after_shift = False
     for idx, press_key in enumerate(key_data):
-        #     print(idx, release_data[idx])
-        idx_search = idx - 3
+        idx_search = np.searchsorted(release_data_ts, press_data_ts[idx])
+        if press_key[1] in eng_alphabet:
+            another_form = capital_to_small_dict[press_key[1]]
+        else:
+            another_form = press_key[1]
         while True:
-            #             print(press_key[1], release_data[idx_search][1], release_data[idx_search][4])
-            if press_key[1] == release_data[idx_search][1] and release_data[idx_search][4] == "release":
+            if (press_key[1] == release_data[idx_search][1] or another_form == release_data[idx_search][1]) and release_data[idx_search][4] == "release":
                 key_data[idx][4] = release_data[idx_search][3]
                 release_data[idx_search][4] = "done"
                 break
             elif press_data_len == idx_search:
-                print(press_data_len, idx_search, press_key, idx)
+                print(press_data_len, idx_search, press_key, idx, "\n")
                 print("find release key error")
                 break
 
             else:
                 idx_search += 1
-    # print(key_data)
     return key_data
 
 
@@ -227,8 +243,8 @@ def refine_all_data(ui_d, key_d):
 
 
 if __name__ == "__main__":
-    ui_p = "./temp_data_sj/ui_data.pkl"
-    key_p = "./temp_data_sj/keyboard_recording.pkl"
+    ui_p = "./temp_data_sj_2/ui_data.pkl"
+    key_p = "./temp_data_sj_2/keyboard_recording.pkl"
 
     with open(ui_p, 'rb') as f:
         ui_d = pkl.load(f)
