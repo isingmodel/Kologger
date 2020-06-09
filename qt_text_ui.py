@@ -83,18 +83,47 @@ class CenterPane(QWidget):
             pass
         return super().eventFilter(obj, event)
 
+class InsertName(QWidget):
+    def __init__(self, data_queue):
+        QWidget.__init__(self)
+        self.data_queue = data_queue
+        self.data = list()
+
+        self.objCntrPane = textbox()
+        # self.objCntrPane.installEventFilter(self)
+
+        self.button = QPushButton('ok', self)
+        self.button.clicked.connect(self.show_next)
+        self.text_box_widget = CenterPane(self.data_queue)
+        self.text_box_widget.setGeometry(250, 250, 700, 600)
+        hbox = QHBoxLayout(self)
+        hbox.addWidget(self.objCntrPane)
+        hbox.addWidget(self.button)
+        self.objCntrPane.setPlainText("이름을 입력하고 ok를 누르세요.")
+        # self.objCntrPane.insertPlainText("write something")
+
+    def show_next(self):
+        subject_name = self.objCntrPane.toPlainText()
+        self.data_queue.put((3, subject_name))
+        self.text_box_widget.show()
+        self.hide()
+
+
+
 
 class MainWindow(QMainWindow):
     def __init__(self, data_queue, p_save, p_keyboard, parent=None):
         super(MainWindow, self).__init__(parent)
-        winLeft = 200
-        winTop = 200
-        winWidth = 700
-        winHeight = 600
+        winLeft = 250
+        winTop = 250
+        winWidth = 400#700
+        winHeight = 200#600
 
-        self.setWindowTitle('Main Window')
+        self.setWindowTitle('Kologer')
+        # self.setGeometry(winLeft, winTop, 400, 200)
+        # self.setCentralWidget(CenterPane(data_queue))
         self.setGeometry(winLeft, winTop, winWidth, winHeight)
-        self.setCentralWidget(CenterPane(data_queue))
+        self.setCentralWidget(InsertName(data_queue))
 
 
 def execute_ui(data_queue, p_save, p_keyboard):

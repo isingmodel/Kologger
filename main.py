@@ -8,6 +8,7 @@ from queue import Empty
 import keyboard_recorder as kr
 import qt_text_ui as ui
 import refine_data as rd
+import datetime
 
 
 # TODO: use log!
@@ -28,15 +29,20 @@ def get_data_from_queue(d_q):
             elif data[0] == 2:
                 print("got exit message")
                 break
+            elif data[0] == 3:
+                subject_name = data[1]
+
         except Empty:
             pass
         finally:
             time.sleep(0.001)
     print("temp record saving!")
     d_q.put((3, None))
-    with open(Path("./temp_data/keyboard_recording.pkl"), 'wb') as f_pynput:
+    now = datetime.datetime.now()
+    time_now = "{}_{}_{}_{}_{}".format(now.year, now.month, now.day, now.hour, now.minute)
+    with open(Path(f"./temp_data/{subject_name}_pynput_{time_now}.pkl"), 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
-    with open(Path("./temp_data/ui_data.pkl"), 'wb') as f_ui:
+    with open(Path(f"./temp_data/{subject_name}_pyqt_{time_now}.pkl"), 'wb') as f_ui:
         pkl.dump(pyqt_data, f_ui)
 
     print("start converting")
@@ -46,7 +52,7 @@ def get_data_from_queue(d_q):
     refined_data = rd.refine_all_data(pyqt_data, pynput_data)
 
     ui_df = rd.list_to_pandas('ui', refined_data)
-    ui_df.to_csv(Path("./ui_data.csv"))
+    ui_df.to_csv(Path(f"./{subject_name}_{time_now}.csv"))
     d_q.put((4, None))
 
 
