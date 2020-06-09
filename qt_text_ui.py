@@ -58,24 +58,24 @@ class CenterPane(QWidget):
     def eventFilter(self, obj, event):
         if event.type() == 7:  # 7, 51, 6 is Eng, other input QkeyEvent
             cursor_position = self.objCntrPane.textCursor().anchor()
-            self.data_queue.put((1,
+            self.data_queue.put([1,
                                  event.text(),
                                  event.key(),
                                  self.objCntrPane.toPlainText(),
                                  time.time(),
                                  cursor_position,
-                                 ))
+                                 ])
 
         if event.type() == 83 and obj is self.objCntrPane:  # IME language input
             cursor_position = self.objCntrPane.textCursor().anchor()
 
-            self.data_queue.put((1,
+            self.data_queue.put([1,
                                  event.preeditString(),
                                  "",
                                  self.objCntrPane.toPlainText(),
                                  time.time(),
                                  cursor_position,
-                                 ))
+                                 ])
             # print(event.AttributeType.Language)
             # print(event.commitString())
             # if event.key() == QtCore.Qt.Key_Return and self.objCntrPane.hasFocus():
