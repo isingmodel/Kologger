@@ -138,34 +138,60 @@ def list_to_pandas(d_type, d_list):
 
 
 def match_pynput_press_release(key_d):
+    key_d = [list(i) + [0] for i in key_d]
+    keyboard_length = len(key_d)
+    is_long_pressed = 0
+    for kbd_idx in range(keyboard_length - 1):
+        if is_long_pressed == 0:
+            if key_d[kbd_idx][4] == 'press' and key_d[kbd_idx + 1][4] == 'press':
+                if key_d[kbd_idx][1] == key_d[kbd_idx + 1][1]:
+                    print("long press")
+                    #             key_d[kbd_idx][5] = 1
+                    key_d[kbd_idx + 1][5] = 1
+                    is_long_pressed = 1
+        elif is_long_pressed == 1:
+            if key_d[kbd_idx][4] == 'press' and key_d[kbd_idx + 1][4] == 'press':
+                if key_d[kbd_idx][1] == key_d[kbd_idx + 1][1]:
+                    print("long press")
+                    key_d[kbd_idx][5] = 1
+                    key_d[kbd_idx + 1][5] = 1
+                    is_long_pressed = 1
+            elif key_d[kbd_idx][4] == 'press' and key_d[kbd_idx + 1][4] == 'release':
+                is_long_pressed = 0
+
     key_data = [list(i) for i in key_d if i[4] == 'press']
-    # print(key_d)
     release_data = [list(i) for i in key_d if i[4] == 'release']
     release_data_ts = [i[3] for i in key_d if i[4] == 'release']
     press_data_ts = [i[3] for i in key_d if i[4] == 'press']
     press_data_len = len(key_data)
-    #     after_shift = False
+    release_data_len = len(release_data)
     for idx, press_key in enumerate(key_data):
+        if key_data[idx][5] == 1:
+            key_data[idx][4] = 0
+            continue
+
         idx_search = np.searchsorted(release_data_ts, press_data_ts[idx])
         if press_key[1] in eng_alphabet:
             another_form = capital_to_small_dict[press_key[1]]
         else:
             another_form = press_key[1]
         while True:
-            if (press_key[1] == release_data[idx_search][1] or
-                another_form == release_data[idx_search][1]) and \
+            if release_data_len <= idx_search:
+                print("find release key error", press_data_len, idx_search, idx, press_key)
+                break
+
+            elif (press_key[1] == release_data[idx_search][1] or
+                  another_form == release_data[idx_search][1]) and \
                     release_data[idx_search][4] == "release":
                 key_data[idx][4] = release_data[idx_search][3]
                 release_data[idx_search][4] = "done"
+                # print("found release key match", press_data_len, idx_search, idx, press_key)
                 break
-            elif press_data_len == idx_search:
-                print(press_data_len, idx_search, press_key, idx, "\n")
-                print("find release key error")
-                break
+
 
             else:
                 idx_search += 1
-    return key_data
+    return [i[:5] for i in key_data]
 
 
 def matching_timestamp(ui_d_refined, key_d_refined):
@@ -249,14 +275,11 @@ def refine_all_data(ui_d, key_d):
     return ui_d_refined_3
 
 
-
-
-
 if __name__ == "__main__":
-    # ui_p = "./0525PKL/ui_data.pkl"
-    # key_p = "./0525PKL/keyboard_recording.pkl"
-    ui_p = "./temp_data_sj_2/ui_data.pkl"
-    key_p = "./temp_data_sj_2/keyboard_recording.pkl"
+    ui_p = "./0525PKL/ui_data.pkl"
+    key_p = "./0525PKL/keyboard_recording.pkl"
+    # ui_p = "./temp_data_sj_2/ui_data.pkl"
+    # key_p = "./temp_data_sj_2/keyboard_recording.pkl"
 
     with open(ui_p, 'rb') as f:
         ui_d = pkl.load(f)
