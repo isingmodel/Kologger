@@ -23,7 +23,6 @@ capital_to_small_dict = {'A': 'a', 'B': 'b', 'C': 'c', 'D': 'd', 'E': 'e', 'F': 
                          'o': 'O', 'p': 'P', 'q': 'Q', 'r': 'R', 's': 'S', 't': 'T', 'u': 'U',
                          'v': 'V', 'w': 'W', 'x': 'X', 'y': 'Y', 'z': 'Z'}
 
-
 kor = list("ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎㅛㅕㅑㅐㅒㅔㅖㅗㅓㅏㅣㅠㅜㅡ")
 eng = list("rRseEfaqQtTdwWczxvgyuioOpPhjklbnm")
 eng_alphabet = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -145,7 +144,7 @@ def match_pynput_press_release(key_d):
     release_data_ts = [i[3] for i in key_d if i[4] == 'release']
     press_data_ts = [i[3] for i in key_d if i[4] == 'press']
     press_data_len = len(key_data)
-#     after_shift = False
+    #     after_shift = False
     for idx, press_key in enumerate(key_data):
         idx_search = np.searchsorted(release_data_ts, press_data_ts[idx])
         if press_key[1] in eng_alphabet:
@@ -153,7 +152,9 @@ def match_pynput_press_release(key_d):
         else:
             another_form = press_key[1]
         while True:
-            if (press_key[1] == release_data[idx_search][1] or another_form == release_data[idx_search][1]) and release_data[idx_search][4] == "release":
+            if (press_key[1] == release_data[idx_search][1] or
+                another_form == release_data[idx_search][1]) and \
+                    release_data[idx_search][4] == "release":
                 key_data[idx][4] = release_data[idx_search][3]
                 release_data[idx_search][4] = "done"
                 break
@@ -167,10 +168,7 @@ def match_pynput_press_release(key_d):
     return key_data
 
 
-def refine_all_data(ui_d, key_d):
-    ui_d_refined = refine_ui_data_init(ui_d)
-    key_d_refined = match_pynput_press_release(refine_data_kbd_init(key_d))
-
+def matching_timestamp(ui_d_refined, key_d_refined):
     ts = [click[4] for click in ui_d_refined]
     ts_eng_press = [click[3] for click in key_d_refined]
     ts_eng_release = [click[4] for click in key_d_refined]
@@ -178,8 +176,8 @@ def refine_all_data(ui_d, key_d):
     Korkey = [click[1] for click in ui_d_refined]
 
     # todo: delete this conversion
-    ui_d_refined_2 = ui_d_refined
-    key_d_refined_2 = key_d_refined
+    ui_d_refined_2 = copy.deepcopy(ui_d_refined)
+    key_d_refined_2 = copy.deepcopy(key_d_refined)
 
     # press, release time init
     for click in ui_d_refined_2:
@@ -188,19 +186,18 @@ def refine_all_data(ui_d, key_d):
         click += [0., 0.]
 
     for kor_idx in range(len(Korkey)):
-
-        if Korkey[kor_idx] == "\x08":
+        # get target key
+        if Korkey[kor_idx] == "\x08":  # Backspace
             target_key = special_key_dict[Korkey[kor_idx]]
-        elif Korkey[kor_idx] in eng:
+        elif Korkey[kor_idx] in eng:  # English input
             target_key = Korkey[kor_idx]
-        elif Korkey[kor_idx] in kor:
+        elif Korkey[kor_idx] in kor:  # Korean input --> change into Eng key
             target_key = kor_to_eng_dict[Korkey[kor_idx]]
-        elif len(Korkey[kor_idx]) == 1 and Korkey[kor_idx] != " ":
+        elif len(Korkey[kor_idx]) == 1 and Korkey[kor_idx] != " ":  # other keys
             target_key = Korkey[kor_idx]
         else:
             target_key = special_key_dict[Korkey[kor_idx]]
-        #             print(Korkey[kor_idx], target_key)
-        #         print(kor_idx, Korkey[kor_idx], "target_key", target_key)
+
         candidate = np.searchsorted(ts_eng_press, ts[kor_idx], side='right')
         for key_idx in range(max(candidate - 3, 0), candidate):
             if target_key == Engkey[key_idx] and key_d_refined_2[key_idx][5] == 0:
@@ -208,7 +205,7 @@ def refine_all_data(ui_d, key_d):
                 ui_d_refined_2[kor_idx][6] = ts_eng_release[key_idx]
                 key_d_refined_2[key_idx][5] = 1
 
-                ui_d_refined_2[kor_idx][7] = 1  # need it?
+                ui_d_refined_2[kor_idx][7] = 1  # TODO: need it?
                 break
 
     ts_refined = np.array([i[4] for i in ui_d_refined_2])
@@ -219,6 +216,16 @@ def refine_all_data(ui_d, key_d):
     ui_d_refined_3 = list()
     for rank in ranks:
         ui_d_refined_3.append(ui_d_refined_2[rank][:7])
+
+    return ui_d_refined_3, key_d_refined_2
+
+
+def refine_all_data(ui_d, key_d):
+    # initial filtering ui key data, &8 pynput key data
+    ui_d_refined = refine_ui_data_init(ui_d)
+    key_d_refined = match_pynput_press_release(refine_data_kbd_init(key_d))
+
+    ui_d_refined_3, key_d_refined_2 = matching_timestamp(ui_d_refined, key_d_refined)
 
     for i in range(len(ui_d_refined_3)):
         if ui_d_refined_3[i][1] == '\r':
@@ -242,7 +249,12 @@ def refine_all_data(ui_d, key_d):
     return ui_d_refined_3
 
 
+
+
+
 if __name__ == "__main__":
+    # ui_p = "./0525PKL/ui_data.pkl"
+    # key_p = "./0525PKL/keyboard_recording.pkl"
     ui_p = "./temp_data_sj_2/ui_data.pkl"
     key_p = "./temp_data_sj_2/keyboard_recording.pkl"
 
