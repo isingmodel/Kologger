@@ -6,6 +6,7 @@ from pathlib import Path
 from queue import Empty
 
 import keyboard_recorder as kr
+import mouse_recorder as mr
 import qt_text_ui as ui
 import refine_data as rd
 import datetime
@@ -16,6 +17,7 @@ import datetime
 def get_data_from_queue(d_q):
     pynput_data = list()
     pyqt_data = list()
+    mouse_data = list()
     while True:
         try:
             data = d_q.get(block=False)
@@ -23,14 +25,15 @@ def get_data_from_queue(d_q):
             if data[0] == 0:
                 pynput_data.append(data)
             elif data[0] == 1:
-
                 pyqt_data.append(data)
-
             elif data[0] == 2:
                 print("got exit message")
                 break
             elif data[0] == 3:
                 subject_name = data[1]
+            elif data[0] == 4:
+                mouse_data.append(data)
+
 
         except Empty:
             pass
@@ -60,8 +63,10 @@ if __name__ == "__main__":
     data_queue = Queue(maxsize=200)
     p_save = Process(target=get_data_from_queue, args=(data_queue,))
     p_keyboard = kr.GetKeyboardData(data_queue)
+    p_mouse = mr.GetMouseData(data_queue)
     p_save.daemon = True
     p_keyboard.daemon = True
     p_save.start()
     p_keyboard.start()
+    p_mouse.start()
     ui.execute_ui(data_queue, p_save, p_keyboard)

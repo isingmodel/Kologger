@@ -3,8 +3,8 @@ from multiprocessing import Process
 
 from pynput import keyboard
 
-key_value_list = list()
-key_value_list_press = list()
+# key_value_list = list()
+# key_value_list_press = list()
 keyboard_button = keyboard.Controller()
 keyboard_key = keyboard.Key
 
@@ -25,7 +25,7 @@ class GetKeyboardData(Process):
             key_value = str(key_data)
             key_type = "else"
         finally:
-            self.data_queue.put([0, key_value, key_type, time.time(), 'press'])
+            self.data_queue.put([0, key_value, key_type, ts, 'press'])
 
     def on_release(self, key_data):
         ts = time.time()
@@ -38,10 +38,10 @@ class GetKeyboardData(Process):
             key_value = str(key_data)
             key_type = "else"
         finally:
-            self.data_queue.put([0, key_value, key_type, time.time(), 'release'])
+            self.data_queue.put([0, key_value, key_type, ts, 'release'])
 
     def run(self):
-        print("keyboard listener start!")
+        print("Keyboard listener start!")
         listener = keyboard.Listener(on_press=self.on_press,
                                      on_release=self.on_release)
         listener.start()
