@@ -4,6 +4,7 @@ from multiprocessing import Process
 from multiprocessing import Queue
 from pathlib import Path
 from queue import Empty
+from refine_data_mouse import mouse_list_to_pandas
 
 import keyboard_recorder as kr
 import mouse_recorder as mr
@@ -32,8 +33,7 @@ def get_data_from_queue(d_q):
             elif data[0] == 3:
                 subject_name = data[1]
             elif data[0] == 4:
-                mouse_data.append(data)
-
+                mouse_data.append(data[1:])
 
         except Empty:
             pass
@@ -47,20 +47,23 @@ def get_data_from_queue(d_q):
         pkl.dump(pynput_data, f_pynput)
     with open(Path(f"./temp_data/{subject_name}_pyqt_{time_now}.pkl"), 'wb') as f_ui:
         pkl.dump(pyqt_data, f_ui)
+    with open(Path(f"./temp_data/{subject_name}_mouse_{time_now}.pkl"), 'wb') as f_mouse:
+        pkl.dump(mouse_data, f_mouse)
 
-    print("start converting")
-    # kdb, ui = rd.refine_data(pynput_data, pyqt_data)
-
-    # r_ui_data = rd.refine_ui_data(pyqt_data)
+    print("mouse start converting")
+    mouse_df = mouse_list_to_pandas(mouse_data)
+    mouse_df.to_csv(Path(f"./mouse_{subject_name}_{time_now}.csv"))
+    print("mouse converting Done")
+    print("keyboard start converting")
     refined_data = rd.refine_all_data(pyqt_data, pynput_data)
-
     ui_df = rd.list_to_pandas('ui', refined_data)
-    ui_df.to_csv(Path(f"./{subject_name}_{time_now}.csv"))
-    d_q.put((4, None))
+    ui_df.to_csv(Path(f"./keyboard_{subject_name}_{time_now}.csv"))
+    print("keyboard converting done")
+    d_q.put(("Kill", None))
 
 
 if __name__ == "__main__":
-    data_queue = Queue(maxsize=200)
+    data_queue = Queue(maxsize=400)
     p_save = Process(target=get_data_from_queue, args=(data_queue,))
     p_keyboard = kr.GetKeyboardData(data_queue)
     p_mouse = mr.GetMouseData(data_queue)

@@ -44,9 +44,9 @@ class CenterPane(QWidget):
             try:
                 data = self.data_queue.get(block=False)
 
-                if data[0] == 4:
+                if data[0] == "Kill":
+                    print("exit!!")
                     break
-
             except Empty:
                 pass
             finally:
