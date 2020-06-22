@@ -69,6 +69,7 @@ if __name__ == "__main__":
     p_mouse = mr.GetMouseData(data_queue)
     p_save.daemon = True
     p_keyboard.daemon = True
+    p_mouse.daemon = True
     p_save.start()
     p_keyboard.start()
     p_mouse.start()
