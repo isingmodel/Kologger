@@ -4,8 +4,8 @@ from sys import exit as sysExit
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
-from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel
+from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton, QVBoxLayout
 import sys
 
 
@@ -90,23 +90,26 @@ class InsertName(QWidget):
         self.data = list()
 
         self.objCntrPane = textbox()
-        # self.objCntrPane.installEventFilter(self)
 
         self.button = QPushButton('ok', self)
         self.button.clicked.connect(self.show_next)
         self.text_box_widget = CenterPane(self.data_queue)
-        self.text_box_widget.setGeometry(250, 250, 700, 600)
-        hbox = QHBoxLayout(self)
+        self.text_box_widget.setGeometry(250, 450, 1000, 700)
+        hbox = QVBoxLayout(self)
+        self.textlabel = QLabel("이름을 입력하고 ok를 누르세요.")
         hbox.addWidget(self.objCntrPane)
+        hbox.addWidget(self.textlabel)
         hbox.addWidget(self.button)
-        self.objCntrPane.setPlainText("이름을 입력하고 ok를 누르세요.")
-        # self.objCntrPane.insertPlainText("write something")
+        # self.objCntrPane.setPlainText("이름을 입력하고 ok를 누르세요.")
 
     def show_next(self):
         subject_name = self.objCntrPane.toPlainText()
+        if subject_name == "":
+            subject_name = "default"
         self.data_queue.put((3, subject_name))
-        self.text_box_widget.show()
         self.hide()
+        self.text_box_widget.show()
+
 
 
 
@@ -115,7 +118,7 @@ class MainWindow(QMainWindow):
     def __init__(self, data_queue, p_save, p_keyboard, parent=None):
         super(MainWindow, self).__init__(parent)
         winLeft = 250
-        winTop = 250
+        winTop = 450
         winWidth = 400#700
         winHeight = 200#600
 
