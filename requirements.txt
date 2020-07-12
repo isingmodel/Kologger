@@ -1,0 +1,5 @@
+numpy==1.18.4
+pandas==1.0.3
+hgtk==0.1.3
+pynput==1.6.8
+PyQt5==5.15.0
