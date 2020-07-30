@@ -6,6 +6,7 @@ import sys
 import time
 from multiprocessing import Process
 from multiprocessing import Queue
+from multiprocessing import freeze_support
 from pathlib import Path
 from queue import Empty
 
@@ -46,30 +47,36 @@ def get_data_from_queue(d_q):
         except Empty:
             pass
         finally:
-            time.sleep(0.001)
+            time.sleep(0.0005)
     print("temp record saving!")
     d_q.put((3, None))
     now = datetime.datetime.now()
     current_path = Path(os.path.dirname(os.path.abspath(__file__)))
+    save_dir = current_path / subject_name
+    try:
+        os.makedirs(save_dir)
+    except FileExistsError:
+        pass
+
     time_now = "{}_{}_{}_{}_{}".format(now.year, now.month, now.day, now.hour, now.minute)
-    with open(current_path / f"temp_data/{subject_name}_pynput_{time_now}.pkl", 'wb') as f_pynput:
+    with open(save_dir / f"{subject_name}_pynput_{time_now}.pkl", 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
-    with open(current_path / f"temp_data/{subject_name}_pyqt_{time_now}.pkl", 'wb') as f_ui:
+    with open(save_dir / f"{subject_name}_pyqt_{time_now}.pkl", 'wb') as f_ui:
         pkl.dump(pyqt_data, f_ui)
-    with open(current_path / f"temp_data/{subject_name}_mouse_{time_now}.pkl", 'wb') as f_mouse:
+    with open(save_dir / f"{subject_name}_mouse_{time_now}.pkl", 'wb') as f_mouse:
         pkl.dump(mouse_data, f_mouse)
-    with open(current_path / f"temp_data/{subject_name}_windows_name_{time_now}.pkl", 'wb') as f_windows:
+    with open(save_dir / f"{subject_name}_windows_name_{time_now}.pkl", 'wb') as f_windows:
         pkl.dump(window_name_data, f_windows)
 
     print("mouse start converting")
-    mouse_df = mouse_list_to_pandas(mouse_data)
-    mouse_df.to_csv(current_path / f"mouse_{subject_name}_{time_now}.csv")
-    print("mouse converting Done")
-    print("keyboard start converting")
-    refined_data = rd.refine_all_data(pyqt_data, pynput_data)
-    ui_df = rd.list_to_pandas('ui', refined_data)
-    ui_df.to_csv(current_path / f"keyboard_{subject_name}_{time_now}.csv")
-    print("keyboard converting done")
+    # mouse_df = mouse_list_to_pandas(mouse_data)
+    # mouse_df.to_csv(current_path / f"mouse_{subject_name}_{time_now}.csv")
+    # print("mouse converting Done")
+    # print("keyboard start converting")
+    # refined_data = rd.refine_all_data(pyqt_data, pynput_data)
+    # ui_df = rd.list_to_pandas('ui', refined_data)
+    # ui_df.to_csv(current_path / f"keyboard_{subject_name}_{time_now}.csv")
+    # print("keyboard converting done")
     d_q.put(("Kill", None))
 
 
@@ -81,6 +88,7 @@ def get_current_window_name(d_q: Queue):
 
 
 if __name__ == "__main__":
+    freeze_support()
     if platform.system() != "Windows":
         print("This program runs only on Windows!!")
         sys.exit(0)

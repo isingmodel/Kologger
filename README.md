@@ -1,4 +1,4 @@
-# UI_typing_recorder
+# Kologger
 
 A key & mouse logging app written in python 
 파이썬으로 만든 한국어 키로거
