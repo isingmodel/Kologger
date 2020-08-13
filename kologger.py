@@ -11,12 +11,13 @@ from pathlib import Path
 from queue import Empty
 
 import win32gui
-
-import keyboard_recorder as kr
-import mouse_recorder as mr
-import qt_text_ui as ui
-import refine_data as rd
-from refine_data_mouse import mouse_list_to_pandas
+from src.refine_data_mouse import mouse_list_to_pandas
+import os
+import src.keyboard_recorder as kr
+import src.mouse_recorder as mr
+import src.qt_text_ui as ui
+import src.refine_data as rd
+import datetime
 
 
 # TODO: use log!
@@ -68,7 +69,8 @@ def get_data_from_queue(d_q):
     with open(save_dir / f"{subject_name}_windows_name_{time_now}.pkl", 'wb') as f_windows:
         pkl.dump(window_name_data, f_windows)
 
-    print("mouse start converting")
+    # print("mouse start converting")
+
     # mouse_df = mouse_list_to_pandas(mouse_data)
     # mouse_df.to_csv(current_path / f"mouse_{subject_name}_{time_now}.csv")
     # print("mouse converting Done")

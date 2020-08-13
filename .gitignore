@@ -7,6 +7,7 @@ qt_text_ui.pyc
 .ipynb_checkpoints/*
 *.csv
 .DS_Store
-dist
-build
 *.spec
+build/
+dist/
+*.bat

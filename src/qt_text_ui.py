@@ -40,6 +40,7 @@ class CenterPane(QWidget):
         self.data_queue.put((2, None))  # exit
         time.sleep(1.5)
         # TODO: Use different queue to exit safe!
+        count = 0
         while True:
             try:
                 data = self.data_queue.get(block=False)
@@ -48,7 +49,12 @@ class CenterPane(QWidget):
                     print("exit!!")
                     break
             except Empty:
-                pass
+                count += 1
+                if count > 2000:
+                    self.data_queue.put((2, None))
+                    time.sleep(3.5)
+                    break
+
             finally:
                 time.sleep(0.01)
 
