@@ -1,5 +1,5 @@
-import datetime
-import os
+# import datetime
+# import os
 import pickle as pkl
 import platform
 import sys
@@ -11,12 +11,12 @@ from pathlib import Path
 from queue import Empty
 
 import win32gui
-from src.refine_data_mouse import mouse_list_to_pandas
+# from src.refine_data_mouse import mouse_list_to_pandas
 import os
 import src.keyboard_recorder as kr
 import src.mouse_recorder as mr
 import src.qt_text_ui as ui
-import src.refine_data as rd
+# import src.refine_data as rd
 import datetime
 
 
@@ -47,7 +47,6 @@ def get_data_from_queue(d_q, temp_queue):
             elif data[0] == 5:
                 window_name_data.append(data[1:])
             count += 1
-            print(count)
             if count % 4000 == 3800:
                 temp_queue.put((pyqt_data, pynput_data))
 

@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(['kologger.py'],
-             pathex=['Kologger path!!!!'],
+             pathex=['./'],
              binaries=[],
              datas=[],
              hiddenimports=[],
