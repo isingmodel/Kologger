@@ -89,6 +89,7 @@ class CenterPane(QWidget):
             pass
         return super().eventFilter(obj, event)
 
+
 class InsertName(QWidget):
     def __init__(self, data_queue):
         QWidget.__init__(self)
@@ -110,14 +111,11 @@ class InsertName(QWidget):
 
     def show_next(self):
         subject_name = self.objCntrPane.toPlainText()
-        if subject_name == "":
-            subject_name = "default"
+        # if subject_name == "":
+        subject_name = "default"
         self.data_queue.put((3, subject_name))
         self.hide()
         self.text_box_widget.show()
-
-
-
 
 
 class MainWindow(QMainWindow):
@@ -125,8 +123,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(parent)
         winLeft = 250
         winTop = 450
-        winWidth = 400#700
-        winHeight = 200#600
+        winWidth = 400  # 700
+        winHeight = 200  # 600
 
         self.setWindowTitle('Kologer')
         # self.setGeometry(winLeft, winTop, 400, 200)
