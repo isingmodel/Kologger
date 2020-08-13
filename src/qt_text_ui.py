@@ -38,7 +38,6 @@ class CenterPane(QWidget):
         print("save and exit button clicked!")
         self.objCntrPane.removeEventFilter(self)
         self.data_queue.put((2, None))  # exit
-        time.sleep(1.5)
         # TODO: Use different queue to exit safe!
         count = 0
         while True:

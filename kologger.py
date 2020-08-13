@@ -21,7 +21,8 @@ import datetime
 
 
 # TODO: use log!
-def get_data_from_queue(d_q):
+
+def get_data_from_queue(d_q, temp_queue):
     pynput_data = list()
     pyqt_data = list()
     mouse_data = list()
@@ -44,7 +45,7 @@ def get_data_from_queue(d_q):
                 mouse_data.append(data[1:])
             elif data[0] == 5:
                 window_name_data.append(data[1:])
-
+            temp_queue.put(data)
         except Empty:
             pass
         finally:
@@ -81,7 +82,6 @@ def get_data_from_queue(d_q):
     # print("keyboard converting done")
     d_q.put(("Kill", None))
 
-
 def get_current_window_name(d_q: Queue):
     while True:
         pycwnd = win32gui.GetForegroundWindow()
@@ -96,6 +96,42 @@ if __name__ == "__main__":
         sys.exit(0)
     data_queue = Queue(maxsize=400)
     p_save = Process(target=get_data_from_queue, args=(data_queue,))
+def temp_file_save(d_q):
+
+    while True:
+        count = 0
+        pynput_data = list()
+        pyqt_data = list()
+        mouse_data = list()
+        subject_name = None
+        while True:
+            try:
+                data = d_q.get(block=False)
+                # if data[0] == (0 or 3):
+                if data[0] == 0:
+                    pynput_data.append(data)
+                elif data[0] == 1:
+                    pyqt_data.append(data)
+                elif data[0] == 2:
+                    print("got exit message")
+                    break
+                elif data[0] == 3:
+                    subject_name = data[1]
+                elif data[0] == 4:
+                    mouse_data.append(data[1:])
+                count += 1
+                if count %
+
+            except Empty:
+                pass
+            finally:
+                time.sleep(0.001)
+
+
+if __name__ == "__main__":
+    data_queue = Queue(maxsize=1000)
+    temp_queue = Queue(maxsize=1000)
+    p_save = Process(target=get_data_from_queue, args=(data_queue, temp_queue))
     p_keyboard = kr.GetKeyboardData(data_queue)
     p_mouse = mr.GetMouseData(data_queue)
     p_window_name = Process(target=get_current_window_name, args=(data_queue,))
