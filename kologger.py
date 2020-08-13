@@ -28,15 +28,16 @@ def get_data_from_queue(d_q, temp_queue):
     mouse_data = list()
     window_name_data = list()
     subject_name = None
+    count = 0
     while True:
         try:
             data = d_q.get(block=False)
-            # if data[0] == (0 or 3):
             if data[0] == 0:
                 pynput_data.append(data)
             elif data[0] == 1:
                 pyqt_data.append(data)
             elif data[0] == 2:
+                temp_queue.put("exit")
                 print("got exit message")
                 break
             elif data[0] == 3:
@@ -45,7 +46,13 @@ def get_data_from_queue(d_q, temp_queue):
                 mouse_data.append(data[1:])
             elif data[0] == 5:
                 window_name_data.append(data[1:])
-            temp_queue.put(data)
+            count += 1
+            print(count)
+            if count % 4000 == 3800:
+                temp_queue.put((pyqt_data, pynput_data))
+
+            if count % 4000 == 3750:
+                temp_queue.put((mouse_data, window_name_data))
         except Empty:
             pass
         finally:
@@ -82,6 +89,31 @@ def get_data_from_queue(d_q, temp_queue):
     # print("keyboard converting done")
     d_q.put(("Kill", None))
 
+
+def temp_data_saving(temp_queue):
+    count = 0
+    current_path = Path(os.path.dirname(os.path.abspath(__file__)))
+    save_dir = current_path / "default"
+    try:
+        os.makedirs(save_dir)
+    except FileExistsError:
+        pass
+    while True:
+        try:
+            data = temp_queue.get(block=False)
+            if data == "exit":
+                print("temp exit")
+                break
+            count += 1
+            with open(save_dir / f"{count}_temp.pkl", 'wb') as f:
+                pkl.dump(data, f)
+
+        except Empty:
+            pass
+        finally:
+            time.sleep(0.05)
+
+
 def get_current_window_name(d_q: Queue):
     while True:
         pycwnd = win32gui.GetForegroundWindow()
@@ -94,53 +126,23 @@ if __name__ == "__main__":
     if platform.system() != "Windows":
         print("This program runs only on Windows!!")
         sys.exit(0)
-    data_queue = Queue(maxsize=400)
-    p_save = Process(target=get_data_from_queue, args=(data_queue,))
-def temp_file_save(d_q):
-
-    while True:
-        count = 0
-        pynput_data = list()
-        pyqt_data = list()
-        mouse_data = list()
-        subject_name = None
-        while True:
-            try:
-                data = d_q.get(block=False)
-                # if data[0] == (0 or 3):
-                if data[0] == 0:
-                    pynput_data.append(data)
-                elif data[0] == 1:
-                    pyqt_data.append(data)
-                elif data[0] == 2:
-                    print("got exit message")
-                    break
-                elif data[0] == 3:
-                    subject_name = data[1]
-                elif data[0] == 4:
-                    mouse_data.append(data[1:])
-                count += 1
-                if count %
-
-            except Empty:
-                pass
-            finally:
-                time.sleep(0.001)
-
-
-if __name__ == "__main__":
     data_queue = Queue(maxsize=1000)
-    temp_queue = Queue(maxsize=1000)
+    temp_queue = Queue(maxsize=5000)
     p_save = Process(target=get_data_from_queue, args=(data_queue, temp_queue))
+    p_temp = Process(target=temp_data_saving, args=(temp_queue,))
     p_keyboard = kr.GetKeyboardData(data_queue)
     p_mouse = mr.GetMouseData(data_queue)
     p_window_name = Process(target=get_current_window_name, args=(data_queue,))
+
     p_save.daemon = True
     p_keyboard.daemon = True
     p_mouse.daemon = True
     p_window_name.daemon = True
+    p_temp.daemon = True
+
     p_save.start()
     p_keyboard.start()
     p_mouse.start()
     p_window_name.start()
+    p_temp.start()
     ui.execute_ui(data_queue, p_save, p_keyboard)
