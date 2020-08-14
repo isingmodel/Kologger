@@ -47,11 +47,11 @@ def get_data_from_queue(d_q, temp_queue):
             elif data[0] == 5:
                 window_name_data.append(data[1:])
             count += 1
-            if count % 4000 == 3800:
-                temp_queue.put((pyqt_data, pynput_data))
+#             if count % 4000 == 3800:
+#                 temp_queue.put((pyqt_data, pynput_data))
 
-            if count % 4000 == 3750:
-                temp_queue.put((mouse_data, window_name_data))
+#             if count % 4000 == 3750:
+#                 temp_queue.put((mouse_data, window_name_data))
         except Empty:
             pass
         finally:
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     data_queue = Queue(maxsize=1000)
     temp_queue = Queue(maxsize=5000)
     p_save = Process(target=get_data_from_queue, args=(data_queue, temp_queue))
-    p_temp = Process(target=temp_data_saving, args=(temp_queue,))
+#     p_temp = Process(target=temp_data_saving, args=(temp_queue,))
     p_keyboard = kr.GetKeyboardData(data_queue)
     p_mouse = mr.GetMouseData(data_queue)
     p_window_name = Process(target=get_current_window_name, args=(data_queue,))
@@ -137,11 +137,11 @@ if __name__ == "__main__":
     p_keyboard.daemon = True
     p_mouse.daemon = True
     p_window_name.daemon = True
-    p_temp.daemon = True
+#     p_temp.daemon = True
 
     p_save.start()
     p_keyboard.start()
     p_mouse.start()
     p_window_name.start()
-    p_temp.start()
+#     p_temp.start()
     ui.execute_ui(data_queue, p_save, p_keyboard)
