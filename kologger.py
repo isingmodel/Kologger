@@ -27,11 +27,11 @@ if config["get_window_name"]:
         logger.error("getting current windows name only works on Windows")
         raise NotImplementedError
     else:
+        # TODO: update requirements.txt & os-specific install
         import win32gui
 
 
 # TODO: use log!
-
 def get_data_from_queue(d_q, temp_queue):
     pynput_data = list()
     pyqt_data = list()
@@ -57,11 +57,6 @@ def get_data_from_queue(d_q, temp_queue):
             elif data[0] == 5:
                 window_name_data.append(data[1:])
             count += 1
-        #             if count % 4000 == 3800:
-        #                 temp_queue.put((pyqt_data, pynput_data))
-
-        #             if count % 4000 == 3750:
-        #                 temp_queue.put((mouse_data, window_name_data))
         except Empty:
             pass
         finally:
@@ -69,9 +64,10 @@ def get_data_from_queue(d_q, temp_queue):
     print("temp record saving!")
     d_q.put((3, None))
     now = datetime.datetime.now()
-    current_path = Path(os.path.dirname(os.path.abspath(__file__)))
-    save_dir = current_path / subject_name
+    curr_path = Path(os.path.dirname(os.path.abspath(__file__)))
+    save_dir = curr_path / subject_name
     try:
+        # TODO: save in separate folders
         os.makedirs(save_dir)
     except FileExistsError:
         pass
@@ -117,4 +113,4 @@ if __name__ == "__main__":
         p_window_name.daemon = True
         p_window_name.start()
 
-    ui.execute_ui(data_queue, p_save, p_keyboard)
+    ui.execute_ui(data_queue)

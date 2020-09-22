@@ -1,3 +1,4 @@
+import sys
 import time
 from queue import Empty
 from sys import exit as sysExit
@@ -6,7 +7,6 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel
 from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton, QVBoxLayout
-import sys
 
 
 class textbox(QPlainTextEdit):
@@ -32,7 +32,6 @@ class CenterPane(QWidget):
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.objCntrPane)
         hbox.addWidget(self.button)
-        # self.objCntrPane.insertPlainText("write something")
 
     def save_and_exit(self):
         print("save and exit button clicked!")
@@ -81,11 +80,6 @@ class CenterPane(QWidget):
                                  time.time(),
                                  cursor_position,
                                  ])
-            # print(event.AttributeType.Language)
-            # print(event.commitString())
-            # if event.key() == QtCore.Qt.Key_Return and self.objCntrPane.hasFocus():
-            #     print('Enter pressed')
-            pass
         return super().eventFilter(obj, event)
 
 
@@ -106,11 +100,10 @@ class InsertName(QWidget):
         hbox.addWidget(self.objCntrPane)
         hbox.addWidget(self.textlabel)
         hbox.addWidget(self.button)
-        # self.objCntrPane.setPlainText("이름을 입력하고 ok를 누르세요.")
 
     def show_next(self):
         subject_name = self.objCntrPane.toPlainText()
-        # if subject_name == "":
+        # TODO: support subject name including special characters
         subject_name = "default"
         self.data_queue.put((3, subject_name))
         self.hide()
@@ -118,23 +111,22 @@ class InsertName(QWidget):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, data_queue, p_save, p_keyboard, parent=None):
+    def __init__(self, data_queue, parent=None):
         super(MainWindow, self).__init__(parent)
+        # TODO: support dynamic window size
         winLeft = 250
         winTop = 450
-        winWidth = 400  # 700
-        winHeight = 200  # 600
+        winWidth = 400
+        winHeight = 200
 
-        self.setWindowTitle('Kologer')
-        # self.setGeometry(winLeft, winTop, 400, 200)
-        # self.setCentralWidget(CenterPane(data_queue))
+        self.setWindowTitle('Kologger')
         self.setGeometry(winLeft, winTop, winWidth, winHeight)
         self.setCentralWidget(InsertName(data_queue))
 
 
-def execute_ui(data_queue, p_save, p_keyboard):
+def execute_ui(data_queue):
     app = QApplication([])
-    GUI = MainWindow(data_queue, p_save, p_keyboard)
+    GUI = MainWindow(data_queue)
     GUI.show()
 
     sysExit(app.exec_())

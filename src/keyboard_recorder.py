@@ -3,8 +3,6 @@ from multiprocessing import Process
 
 from pynput import keyboard
 
-# key_value_list = list()
-# key_value_list_press = list()
 keyboard_button = keyboard.Controller()
 keyboard_key = keyboard.Key
 
