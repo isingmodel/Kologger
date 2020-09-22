@@ -1,8 +1,9 @@
-# import datetime
-# import os
+import datetime
+import json
+import logging
+import os
 import pickle as pkl
 import platform
-import sys
 import time
 from multiprocessing import Process
 from multiprocessing import Queue
@@ -10,14 +11,23 @@ from multiprocessing import freeze_support
 from pathlib import Path
 from queue import Empty
 
-import win32gui
-# from src.refine_data_mouse import mouse_list_to_pandas
-import os
 import src.keyboard_recorder as kr
 import src.mouse_recorder as mr
 import src.qt_text_ui as ui
-# import src.refine_data as rd
-import datetime
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+current_path = Path(os.path.dirname(os.path.abspath(__file__)))
+config_path = current_path / "config.json"
+with open(config_path, 'r') as f_config:
+    config = json.load(f_config)
+
+if config["get_window_name"]:
+    if platform.system() != "Windows":
+        logger = logging.getLogger()
+        logger.error("getting current windows name only works on Windows")
+        raise NotImplementedError
+    else:
+        import win32gui
 
 
 # TODO: use log!
@@ -47,11 +57,11 @@ def get_data_from_queue(d_q, temp_queue):
             elif data[0] == 5:
                 window_name_data.append(data[1:])
             count += 1
-#             if count % 4000 == 3800:
-#                 temp_queue.put((pyqt_data, pynput_data))
+        #             if count % 4000 == 3800:
+        #                 temp_queue.put((pyqt_data, pynput_data))
 
-#             if count % 4000 == 3750:
-#                 temp_queue.put((mouse_data, window_name_data))
+        #             if count % 4000 == 3750:
+        #                 temp_queue.put((mouse_data, window_name_data))
         except Empty:
             pass
         finally:
@@ -76,41 +86,7 @@ def get_data_from_queue(d_q, temp_queue):
     with open(save_dir / f"{subject_name}_windows_name_{time_now}.pkl", 'wb') as f_windows:
         pkl.dump(window_name_data, f_windows)
 
-    # print("mouse start converting")
-
-    # mouse_df = mouse_list_to_pandas(mouse_data)
-    # mouse_df.to_csv(current_path / f"mouse_{subject_name}_{time_now}.csv")
-    # print("mouse converting Done")
-    # print("keyboard start converting")
-    # refined_data = rd.refine_all_data(pyqt_data, pynput_data)
-    # ui_df = rd.list_to_pandas('ui', refined_data)
-    # ui_df.to_csv(current_path / f"keyboard_{subject_name}_{time_now}.csv")
-    # print("keyboard converting done")
     d_q.put(("Kill", None))
-
-
-def temp_data_saving(temp_queue):
-    count = 0
-    current_path = Path(os.path.dirname(os.path.abspath(__file__)))
-    save_dir = current_path / "default"
-    try:
-        os.makedirs(save_dir)
-    except FileExistsError:
-        pass
-    while True:
-        try:
-            data = temp_queue.get(block=False)
-            if data == "exit":
-                print("temp exit")
-                break
-            count += 1
-            with open(save_dir / f"{count}_temp.pkl", 'wb') as f:
-                pkl.dump(data, f)
-
-        except Empty:
-            pass
-        finally:
-            time.sleep(0.05)
 
 
 def get_current_window_name(d_q: Queue):
@@ -122,26 +98,23 @@ def get_current_window_name(d_q: Queue):
 
 if __name__ == "__main__":
     freeze_support()
-    if platform.system() != "Windows":
-        print("This program runs only on Windows!!")
-        sys.exit(0)
+
     data_queue = Queue(maxsize=1000)
     temp_queue = Queue(maxsize=5000)
     p_save = Process(target=get_data_from_queue, args=(data_queue, temp_queue))
-#     p_temp = Process(target=temp_data_saving, args=(temp_queue,))
     p_keyboard = kr.GetKeyboardData(data_queue)
-    p_mouse = mr.GetMouseData(data_queue)
-    p_window_name = Process(target=get_current_window_name, args=(data_queue,))
-
     p_save.daemon = True
     p_keyboard.daemon = True
-    p_mouse.daemon = True
-    p_window_name.daemon = True
-#     p_temp.daemon = True
-
     p_save.start()
     p_keyboard.start()
-    p_mouse.start()
-    p_window_name.start()
-#     p_temp.start()
+
+    if config["get_mouse_data"]:
+        p_mouse = mr.GetMouseData(data_queue)
+        p_mouse.daemon = True
+        p_mouse.start()
+    if config["get_window_name"]:
+        p_window_name = Process(target=get_current_window_name, args=(data_queue,))
+        p_window_name.daemon = True
+        p_window_name.start()
+
     ui.execute_ui(data_queue, p_save, p_keyboard)
