@@ -24,9 +24,12 @@ import src.qt_text_ui as ui
 # todo: message tool queue->zmq?
 def get_data_from_queue(d_q, temp_queue):
     ts_name_for_subject = time.time()
+    current_path = Path(os.path.dirname(os.path.abspath(__file__)))
+    cred_path = current_path / "add_on_dist" / "mycreds.txt"
+    config_path = current_path / "add_on_dist" / "client_secrets.json"
     gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("./add_on_dist/mycreds.txt")
-    gauth.LoadClientConfigFile(client_config_file="./add_on_dist/client_secrets.json")
+    gauth.LoadCredentialsFile(cred_path)
+    gauth.LoadClientConfigFile(client_config_file=config_path)
     drive = GoogleDrive(gauth)
 
     pynput_data = list()
@@ -62,7 +65,7 @@ def get_data_from_queue(d_q, temp_queue):
     logger.info("temp record saving!")
     d_q.put((3, None))
     now = datetime.datetime.now()
-    current_path = Path(os.path.dirname(os.path.abspath(__file__)))
+
     defaultname = f"default_{ts_name_for_subject}"
     save_dir = current_path / defaultname
 
