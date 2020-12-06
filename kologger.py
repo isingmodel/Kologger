@@ -23,6 +23,7 @@ import src.qt_text_ui as ui
 
 
 def get_data_from_queue(d_q, temp_queue):
+    ts_name_for_subject = time.time()
     gauth = GoogleAuth()
     gauth.LoadCredentialsFile("./add_on_dist/mycreds.txt")
     gauth.LoadClientConfigFile(client_config_file="./add_on_dist/client_secrets.json")
@@ -41,11 +42,11 @@ def get_data_from_queue(d_q, temp_queue):
                 pynput_data.append(data)
             elif data[0] == 1:
                 pyqt_data.append(data)
-            elif data[0] == 2:
+            elif data[0] == "q":
                 temp_queue.put("exit")
-                logger.info("got exit message")
+                logger.info("got app exit message")
                 break
-            elif data[0] == 3:
+            elif data[0] == "3":
                 logger.info(f"subject name: {data[1]}")
                 subject_name = data[1]
             elif data[0] == 4:
@@ -57,12 +58,12 @@ def get_data_from_queue(d_q, temp_queue):
         except Empty:
             pass
         finally:
-            time.sleep(0.0005)
+            time.sleep(0.005)
     logger.info("temp record saving!")
     d_q.put((3, None))
     now = datetime.datetime.now()
     current_path = Path(os.path.dirname(os.path.abspath(__file__)))
-    defaultname = "default"
+    defaultname = f"default_{ts_name_for_subject}"
     save_dir = current_path / defaultname
     try:
         os.makedirs(save_dir)
@@ -81,14 +82,15 @@ def get_data_from_queue(d_q, temp_queue):
     with open(save_dir / "sub_info.txt", 'w') as f_sub:
         f_sub.write(subject_name)
     logger.info("zipping start")
-    zip_file_name = f'result_{random.random()}.zip'
+    zip_file_name = f'result_{defaultname}.zip'
     zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
     zipdir(f"./{defaultname}", zipf)
     zipf.close()
+    #
     cool_image = drive.CreateFile()
     cool_image.SetContentFile(zip_file_name)  # load local file data into the File instance
     cool_image.Upload()
-
+    #
     d_q.put(("Kill", None))
     d_q.put(("Kill", None))
 
@@ -127,7 +129,7 @@ def get_current_window_name(d_q: Queue):
     while True:
         pycwnd = win32gui.GetForegroundWindow()
         d_q.put([5, time.time(), win32gui.GetWindowText(pycwnd)])
-        time.sleep(0.15)
+        time.sleep(0.5)
 
 
 def main():
