@@ -11,3 +11,4 @@ qt_text_ui.pyc
 build/
 dist/
 *.bat
+add_on_dist
