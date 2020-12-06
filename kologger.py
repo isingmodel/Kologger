@@ -1,34 +1,31 @@
-# import datetime
-# import os
+import datetime
+import os
 import pickle as pkl
 import platform
+import random
 import sys
 import time
+import zipfile
 from multiprocessing import Process
 from multiprocessing import Queue
 from multiprocessing import freeze_support
 from pathlib import Path
 from queue import Empty
-import random
 
 import win32gui
-# from src.refine_data_mouse import mouse_list_to_pandas
-import os
+from loguru import logger
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
 import src.keyboard_recorder as kr
 import src.mouse_recorder as mr
 import src.qt_text_ui as ui
-# import src.refine_data as rd
-import datetime
-import os
-import zipfile
-from pydrive.drive import GoogleDrive
-from pydrive.auth import GoogleAuth
 
-# TODO: use log!
 
 def get_data_from_queue(d_q, temp_queue):
     gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("mycreds.txt")
+    gauth.LoadCredentialsFile("./add_on_dist/mycreds.txt")
+    gauth.LoadClientConfigFile(client_config_file="./add_on_dist/client_secrets.json")
     drive = GoogleDrive(gauth)
 
     pynput_data = list()
@@ -46,25 +43,22 @@ def get_data_from_queue(d_q, temp_queue):
                 pyqt_data.append(data)
             elif data[0] == 2:
                 temp_queue.put("exit")
-                print("got exit message")
+                logger.info("got exit message")
                 break
             elif data[0] == 3:
+                logger.info(f"subject name: {data[1]}")
                 subject_name = data[1]
             elif data[0] == 4:
                 mouse_data.append(data[1:])
             elif data[0] == 5:
                 window_name_data.append(data[1:])
             count += 1
-#             if count % 4000 == 3800:
-#                 temp_queue.put((pyqt_data, pynput_data))
 
-#             if count % 4000 == 3750:
-#                 temp_queue.put((mouse_data, window_name_data))
         except Empty:
             pass
         finally:
             time.sleep(0.0005)
-    print("temp record saving!")
+    logger.info("temp record saving!")
     d_q.put((3, None))
     now = datetime.datetime.now()
     current_path = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -86,7 +80,7 @@ def get_data_from_queue(d_q, temp_queue):
         pkl.dump(window_name_data, f_windows)
     with open(save_dir / "sub_info.txt", 'w') as f_sub:
         f_sub.write(subject_name)
-    print("zipping start")
+    logger.info("zipping start")
     zip_file_name = f'result_{random.random()}.zip'
     zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
     zipdir(f"./{defaultname}", zipf)
@@ -99,13 +93,10 @@ def get_data_from_queue(d_q, temp_queue):
     d_q.put(("Kill", None))
 
 
-
 def zipdir(path, ziph):
     for root, dirs, files in os.walk(path):
         for file in files:
             ziph.write(os.path.join(root, file))
-
-
 
 
 def temp_data_saving(temp_queue):
@@ -120,7 +111,7 @@ def temp_data_saving(temp_queue):
         try:
             data = temp_queue.get(block=False)
             if data == "exit":
-                print("temp exit")
+                logger.info("temp exit")
                 break
             count += 1
             with open(save_dir / f"{count}_temp.pkl", 'wb') as f:
@@ -139,15 +130,10 @@ def get_current_window_name(d_q: Queue):
         time.sleep(0.15)
 
 
-if __name__ == "__main__":
-    freeze_support()
-    if platform.system() != "Windows":
-        print("This program runs only on Windows!!")
-        sys.exit(0)
+def main():
     data_queue = Queue(maxsize=1000)
     temp_queue = Queue(maxsize=5000)
     p_save = Process(target=get_data_from_queue, args=(data_queue, temp_queue))
-#     p_temp = Process(target=temp_data_saving, args=(temp_queue,))
     p_keyboard = kr.GetKeyboardData(data_queue)
     p_mouse = mr.GetMouseData(data_queue)
     p_window_name = Process(target=get_current_window_name, args=(data_queue,))
@@ -156,11 +142,20 @@ if __name__ == "__main__":
     p_keyboard.daemon = True
     p_mouse.daemon = True
     p_window_name.daemon = True
-#     p_temp.daemon = True
+
 
     p_save.start()
     p_keyboard.start()
     p_mouse.start()
     p_window_name.start()
-#     p_temp.start()
+
     ui.execute_ui(data_queue, p_save, p_keyboard)
+
+
+if __name__ == "__main__":
+    freeze_support()
+    if platform.system() != "Windows":
+        logger.error("This program runs only on Windows!!")
+        sys.exit(0)
+    main()
+

@@ -2,6 +2,7 @@ import time
 from multiprocessing import Process
 
 from pynput import mouse
+from loguru import logger
 
 
 class GetMouseData(Process):
@@ -11,21 +12,18 @@ class GetMouseData(Process):
 
     def on_move(self, x, y):
         ts = time.time()
-        # print([x, y, 'move'])
         self.data_queue.put([4, x, y, 'move', ts])
 
     def on_click(self, x, y, button, pressed):
         ts = time.time()
-        # print([x, y, str(button)])
         self.data_queue.put([4, x, y, str(button), ts])
 
     def on_scroll(self, x, y, dx, dy):
         ts = time.time()
-        # print([x, y, dx, dy])
         self.data_queue.put([4, dx, dy, "scroll", ts])
 
     def run(self):
-        print("Mouse listener start!")
+        logger.info("Mouse listener start!")
         listener = mouse.Listener(on_move=self.on_move,
                                   on_click=self.on_click,
                                   on_scroll=self.on_scroll)

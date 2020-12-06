@@ -2,9 +2,7 @@ import time
 from multiprocessing import Process
 
 from pynput import keyboard
-
-# key_value_list = list()
-# key_value_list_press = list()
+from loguru import logger
 keyboard_button = keyboard.Controller()
 keyboard_key = keyboard.Key
 
@@ -41,7 +39,7 @@ class GetKeyboardData(Process):
             self.data_queue.put([0, key_value, key_type, ts, 'release'])
 
     def run(self):
-        print("Keyboard listener start!")
+        logger.info("Keyboard listener start!")
         listener = keyboard.Listener(on_press=self.on_press,
                                      on_release=self.on_release)
         listener.start()

@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel
 from PyQt5.QtWidgets import QPlainTextEdit, QHBoxLayout, QPushButton, QVBoxLayout
 import sys
-
+from loguru import logger
 
 class textbox(QPlainTextEdit):
     def __init__(self):
@@ -35,7 +35,7 @@ class CenterPane(QWidget):
         # self.objCntrPane.insertPlainText("write something")
 
     def save_and_exit(self):
-        print("save and exit button clicked!")
+        logger.info("save and exit button clicked!")
         self.objCntrPane.removeEventFilter(self)
         self.data_queue.put((2, None))  # exit
         # TODO: Use different queue to exit safe!
@@ -45,7 +45,7 @@ class CenterPane(QWidget):
                 data = self.data_queue.get(block=False)
 
                 if data[0] == "Kill":
-                    print("exit!!")
+                    logger.info("Kologger termination")
                     break
             except Empty:
                 count += 1
@@ -81,11 +81,6 @@ class CenterPane(QWidget):
                                  time.time(),
                                  cursor_position,
                                  ])
-            # print(event.AttributeType.Language)
-            # print(event.commitString())
-            # if event.key() == QtCore.Qt.Key_Return and self.objCntrPane.hasFocus():
-            #     print('Enter pressed')
-            pass
         return super().eventFilter(obj, event)
 
 
@@ -106,7 +101,6 @@ class InsertName(QWidget):
         hbox.addWidget(self.objCntrPane)
         hbox.addWidget(self.textlabel)
         hbox.addWidget(self.button)
-        # self.objCntrPane.setPlainText("이름을 입력하고 ok를 누르세요.")
 
     def show_next(self):
         subject_name = self.objCntrPane.toPlainText()
