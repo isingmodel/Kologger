@@ -49,13 +49,13 @@ class CenterPane(QWidget):
                     break
             except Empty:
                 count += 1
-                if count > 2000:
+                if count > 1500:
                     self.data_queue.put((2, None))
-                    time.sleep(3.5)
+                    time.sleep(2.5)
                     break
 
             finally:
-                time.sleep(0.01)
+                time.sleep(0.001)
 
         # QtCore.QCoreApplication.instance().quit()
         sys.exit(0)
@@ -110,8 +110,8 @@ class InsertName(QWidget):
 
     def show_next(self):
         subject_name = self.objCntrPane.toPlainText()
-        # if subject_name == "":
-        subject_name = "default"
+        if subject_name == "":
+            subject_name = "default"
         self.data_queue.put((3, subject_name))
         self.hide()
         self.text_box_widget.show()

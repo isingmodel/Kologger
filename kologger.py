@@ -9,6 +9,7 @@ from multiprocessing import Queue
 from multiprocessing import freeze_support
 from pathlib import Path
 from queue import Empty
+import random
 
 import win32gui
 # from src.refine_data_mouse import mouse_list_to_pandas
@@ -18,11 +19,18 @@ import src.mouse_recorder as mr
 import src.qt_text_ui as ui
 # import src.refine_data as rd
 import datetime
-
+import os
+import zipfile
+from pydrive.drive import GoogleDrive
+from pydrive.auth import GoogleAuth
 
 # TODO: use log!
 
 def get_data_from_queue(d_q, temp_queue):
+    gauth = GoogleAuth()
+    gauth.LoadCredentialsFile("mycreds.txt")
+    drive = GoogleDrive(gauth)
+
     pynput_data = list()
     pyqt_data = list()
     mouse_data = list()
@@ -60,33 +68,44 @@ def get_data_from_queue(d_q, temp_queue):
     d_q.put((3, None))
     now = datetime.datetime.now()
     current_path = Path(os.path.dirname(os.path.abspath(__file__)))
-    save_dir = current_path / subject_name
+    defaultname = "default"
+    save_dir = current_path / defaultname
     try:
         os.makedirs(save_dir)
     except FileExistsError:
         pass
 
     time_now = "{}_{}_{}_{}_{}".format(now.year, now.month, now.day, now.hour, now.minute)
-    with open(save_dir / f"{subject_name}_pynput_{time_now}.pkl", 'wb') as f_pynput:
+    with open(save_dir / f"default_pynput_{time_now}.pkl", 'wb') as f_pynput:
         pkl.dump(pynput_data, f_pynput)
-    with open(save_dir / f"{subject_name}_pyqt_{time_now}.pkl", 'wb') as f_ui:
+    with open(save_dir / f"default_pyqt_{time_now}.pkl", 'wb') as f_ui:
         pkl.dump(pyqt_data, f_ui)
-    with open(save_dir / f"{subject_name}_mouse_{time_now}.pkl", 'wb') as f_mouse:
+    with open(save_dir / f"default_mouse_{time_now}.pkl", 'wb') as f_mouse:
         pkl.dump(mouse_data, f_mouse)
-    with open(save_dir / f"{subject_name}_windows_name_{time_now}.pkl", 'wb') as f_windows:
+    with open(save_dir / f"default_windows_name_{time_now}.pkl", 'wb') as f_windows:
         pkl.dump(window_name_data, f_windows)
+    with open(save_dir / "sub_info.txt", 'w') as f_sub:
+        f_sub.write(subject_name)
+    print("zipping start")
+    zip_file_name = f'result_{random.random()}.zip'
+    zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+    zipdir(f"./{defaultname}", zipf)
+    zipf.close()
+    cool_image = drive.CreateFile()
+    cool_image.SetContentFile(zip_file_name)  # load local file data into the File instance
+    cool_image.Upload()
 
-    # print("mouse start converting")
-
-    # mouse_df = mouse_list_to_pandas(mouse_data)
-    # mouse_df.to_csv(current_path / f"mouse_{subject_name}_{time_now}.csv")
-    # print("mouse converting Done")
-    # print("keyboard start converting")
-    # refined_data = rd.refine_all_data(pyqt_data, pynput_data)
-    # ui_df = rd.list_to_pandas('ui', refined_data)
-    # ui_df.to_csv(current_path / f"keyboard_{subject_name}_{time_now}.csv")
-    # print("keyboard converting done")
     d_q.put(("Kill", None))
+    d_q.put(("Kill", None))
+
+
+
+def zipdir(path, ziph):
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
+
+
 
 
 def temp_data_saving(temp_queue):
