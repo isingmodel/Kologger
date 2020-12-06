@@ -20,7 +20,7 @@ class textbox(QPlainTextEdit):
 
 class CenterPane(QWidget):
     # DURATION_INT = 605
-    DURATION_INT = 25
+    DURATION_INT = 605
 
     def __init__(self, data_queue):
         QWidget.__init__(self)
@@ -60,6 +60,7 @@ class CenterPane(QWidget):
         logger.debug("app kill message sent!")
         # TODO: Use different queue to exit safe!
         count = 0
+        time.sleep(0.5)
         while True:
             try:
                 data = self.data_queue.get(block=False)
@@ -77,7 +78,7 @@ class CenterPane(QWidget):
                     break
 
             finally:
-                time.sleep(0.001)
+                time.sleep(0.0001)
 
         # QtCore.QCoreApplication.instance().quit()
         sys.exit(0)

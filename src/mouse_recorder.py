@@ -11,8 +11,9 @@ class GetMouseData(Process):
         self.data_queue = data_queue
 
     def on_move(self, x, y):
-        ts = time.time()
-        self.data_queue.put([4, x, y, 'move', ts])
+        pass
+        # ts = time.time()
+        # self.data_queue.put([4, x, y, 'move', ts])
 
     def on_click(self, x, y, button, pressed):
         ts = time.time()

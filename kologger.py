@@ -21,7 +21,7 @@ import src.keyboard_recorder as kr
 import src.mouse_recorder as mr
 import src.qt_text_ui as ui
 
-
+# todo: message tool queue->zmq?
 def get_data_from_queue(d_q, temp_queue):
     ts_name_for_subject = time.time()
     gauth = GoogleAuth()
@@ -65,6 +65,13 @@ def get_data_from_queue(d_q, temp_queue):
     current_path = Path(os.path.dirname(os.path.abspath(__file__)))
     defaultname = f"default_{ts_name_for_subject}"
     save_dir = current_path / defaultname
+
+    final_text = pyqt_data[-1][3]
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    txt_path = Path(desktop) / "your_article.txt"
+    with open(txt_path, 'w') as f:
+        f.write(final_text)
+
     try:
         os.makedirs(save_dir)
     except FileExistsError:
@@ -129,7 +136,7 @@ def get_current_window_name(d_q: Queue):
     while True:
         pycwnd = win32gui.GetForegroundWindow()
         d_q.put([5, time.time(), win32gui.GetWindowText(pycwnd)])
-        time.sleep(0.5)
+        time.sleep(0.3)
 
 
 def main():
