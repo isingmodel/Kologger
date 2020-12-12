@@ -20,7 +20,7 @@ class textbox(QPlainTextEdit):
 
 class CenterPane(QWidget):
     # DURATION_INT = 605
-    DURATION_INT = 605
+    DURATION_INT = 600
 
     def __init__(self, data_queue):
         QWidget.__init__(self)
@@ -45,10 +45,6 @@ class CenterPane(QWidget):
         vbox.addWidget(self.objCntrPane)
 
         self.setWindowTitle('Kologger')
-
-        self.timer_start()
-        self.update_gui()
-
         # self.objCntrPane.insertPlainText("write something")
 
     def save_and_exit(self):
@@ -137,9 +133,6 @@ class InsertName(QWidget):
         QWidget.__init__(self)
         self.data_queue = data_queue
         self.data = list()
-
-
-
         self.button = QPushButton('ok', self)
         self.button.clicked.connect(self.show_next)
         self.text_box_widget = CenterPane(self.data_queue)
@@ -156,6 +149,8 @@ class InsertName(QWidget):
         if subject_name == "":
             subject_name = "default"
         self.data_queue.put(("3", subject_name))
+        self.text_box_widget.timer_start()
+        self.text_box_widget.update_gui()
         self.text_box_widget.show()
         self.close()
 
